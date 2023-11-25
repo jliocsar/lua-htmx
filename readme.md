@@ -7,3 +7,10 @@
 ## Dependencies
 
 - [`luv`](https://github.com/luvit/luv)
+
+## To do
+
+- [ ] gzip compression;
+- [ ] minify css/html;
+- [ ] improve caching layer (headers, static requests etc);
+- [ ] mongodb connection.
