@@ -10,9 +10,9 @@ local serveStatic = static.serve()
 ---@param req Request
 ---@return string
 local function handleRequest(req)
-    local static = serveStatic(req)
-    if static then
-        return static
+    local resource = serveStatic(req)
+    if resource then
+        return http.response(resource)
     end
     local route_name = req.path:sub(2)
     if route_name == '' then
@@ -20,10 +20,10 @@ local function handleRequest(req)
     end
     local route = router[route_name]
     if not route then
-        return http.response({
+        return http.response {
             status = http.Status.NOT_FOUND,
             body = 'Not found'
-        })
+        }
     end
     local response = route(req)
     return http.response(response)

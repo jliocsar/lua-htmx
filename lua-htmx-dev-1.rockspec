@@ -10,7 +10,7 @@ description = {
 dependencies = {
    "lua >= 5.4",
    "luv >= 1.45",
-   "template >= 0.2"
+   "etlua >= 1.3"
 }
 build = {
    type = "builtin",

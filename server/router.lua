@@ -1,29 +1,32 @@
 local htmx = require "lib.htmx"
 
----@alias route string
----@class Router
----@field [route] handler
+---@type Router
 local Router = {}
 
 Router.index = function(req)
+    return htmx.layout("test.tpl", {
+        title = 'Index',
+        data = {
+            name = "leafo",
+            items = { "Shoe", "Reflector", "Scarf" }
+        }
+    })
+end
+
+Router.alone = function(req)
+    local body = htmx.renderFromFile("test.tpl", {
+        name = "leafo",
+        items = { "Shoe", "Reflector", "Scarf" }
+    })
     return {
-        body = htmx.template(
-            [[<title>Index</title>]],
-            [[
-                <h1>Index</h1>
-                <img width=600 src="/static/rat.webp" />
-                <button hx-post="/clicked" hx-swap="outerHTML">
-                    Click Me
-                </button>
-            ]]
-        )
+        body = body
     }
 end
 
 Router.clicked = function(req)
     return {
         body = [[
-            <div>CLICKED MA HOMIEEEEE</div>
+            <h1>Clicked</h1>!!!
         ]]
     }
 end

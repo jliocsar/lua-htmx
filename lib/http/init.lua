@@ -4,15 +4,19 @@ local tcp = require "lib.http.tcp"
 ---@field status? status
 ---@field body? string
 ---@field headers? table<string, string>
----
+
 ---@class Request
 ---@field method string
 ---@field path string
 ---@field version string
 ---@field headers table<string, string>
 ---@field body string
----
----@alias handler async fun(req: Request): Response
+
+---@alias route string
+---@class Router
+---@field [route] handler
+
+---@alias handler async fun(req: Request): Response | nil
 
 local HTTP_REQUEST_HEAD_MATCH <const> = "([A-Z]+) ([^ ]+) HTTP/([0-9.]+)(.+)"
 local HTTP_HEADER_ENTRY_MATCH <const> = "([^:]+):%s([^\r\n]+)"
@@ -24,11 +28,12 @@ local Http = {}
 ---@enum status
 Http.Status = {
     OK = "200",
+    NOT_MODIFIED = "304",
+    BAD_REQUEST = "400",
+    UNAUTHORIZED = "401",
+    FORBIDDEN = "403",
     NOT_FOUND = "404",
     INTERNAL_SERVER_ERROR = "500",
-    BAD_REQUEST = "400",
-    FORBIDDEN = "403",
-    UNAUTHORIZED = "401"
 }
 
 ---@param req string

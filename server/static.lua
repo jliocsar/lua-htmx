@@ -1,16 +1,12 @@
 local http = require "lib.http"
+local path = require 'lib.utils.path'
 
 ---@class StaticOptions
 ---@field prefix? string
 
-local function getPublicPath()
-    local pwd = io.popen('pwd'):read('*a'):gsub('\n', '')
-    return pwd .. '/public'
-end
-
 ---@type table<string, string>
 local cached = {}
-local public_path = getPublicPath()
+local public_path = path.resolve 'public'
 ---@class Static
 local Static = {}
 
@@ -19,6 +15,7 @@ Static.serve = function(options)
     local prefix = options and options.prefix or 'static'
     ---@async
     ---@param req Request
+    ---@return Response?
     return function(req)
         local path = req.path
         local is_static = path:find("^/" .. prefix .. "/") ~= nil
@@ -26,18 +23,21 @@ Static.serve = function(options)
             return nil
         end
         if cached[path] then
-            return cached[path]
+            return {
+                status = http.Status.NOT_MODIFIED,
+                body = cached[path]
+            }
         end
         local file_path = path:gsub('static/', '')
         local public_file_path = public_path .. file_path
         local file = io.open(public_file_path, 'r')
         if not file then
-            return http.response({ status = http.Status.NOT_FOUND })
+            return { status = http.Status.NOT_FOUND }
         end
         local content = file:read('*a')
         file:close()
-        local response = http.response({ body = content })
-        cached[path] = response
+        local response = { body = content }
+        cached[path] = content
         return response
     end
 end

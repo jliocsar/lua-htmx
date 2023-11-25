@@ -6,11 +6,11 @@ local uv = require 'luv'
 ---@field accept fun(self: Socket, client: Client)
 ---@field getsockname fun(self: Socket): unknown?
 ---@field close fun(self: Socket)
----
+
 ---@class Server
 ---@field socket Socket
 ---@field start fun()
----
+
 ---@class Client
 ---@field read_start fun(self: Client, callback: fun(err: string, data: string))
 ---@field write fun(self: Client, data: string, callback: fun(err: string))
