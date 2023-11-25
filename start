@@ -1,0 +1,3 @@
+#!/bin/sh
+eval $(luarocks path)
+lua ./server/init.lua

@@ -1,3 +1,4 @@
+#!/bin/sh
 cwd=$(pwd)
 
 sudo apt install -y liblua5.4-dev
