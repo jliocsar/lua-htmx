@@ -4,6 +4,20 @@
 - [`liblua5.4-dev`](https://packages.debian.org/sid/liblua5.4-dev)
 - [`luarocks`](https://luarocks.org/#quick-start)
 
+## Instructions
+
+### Installing dependencies
+
+```sh
+./install
+```
+
+### Starting HTTP server
+
+```sh
+./start
+```
+
 ## To do
 
 - [ ] gzip compression;
