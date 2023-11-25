@@ -4,10 +4,6 @@
 - [`liblua5.4-dev`](https://packages.debian.org/sid/liblua5.4-dev)
 - [`luarocks`](https://luarocks.org/#quick-start)
 
-## Dependencies
-
-- [`luv`](https://github.com/luvit/luv)
-
 ## To do
 
 - [ ] gzip compression;

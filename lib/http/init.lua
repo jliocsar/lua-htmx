@@ -1,4 +1,4 @@
-local Tcp = require "lib.http.tcp"
+local tcp = require "lib.http.tcp"
 
 ---@class Response
 ---@field status? status
@@ -91,7 +91,7 @@ end
 ---@param on_request fun(req: Request): string
 ---@return Server
 Http.createServer = function(host, port, on_request)
-    local server = Tcp.createServer(host, port, function(req)
+    local server = tcp.createServer(host, port, function(req)
         local parsed_req = Http.parseRequest(req)
         return on_request(parsed_req)
     end)

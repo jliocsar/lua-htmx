@@ -1,4 +1,4 @@
-local Htmx = require "lib.htmx"
+local htmx = require "lib.htmx"
 
 ---@alias route string
 ---@class Router
@@ -7,7 +7,7 @@ local Router = {}
 
 Router.index = function(req)
     return {
-        body = Htmx.template(
+        body = htmx.template(
             [[<title>Index</title>]],
             [[
                 <h1>Index</h1>

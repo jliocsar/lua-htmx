@@ -1,4 +1,4 @@
-local Http = require "lib.http"
+local http = require "lib.http"
 
 ---@class StaticOptions
 ---@field prefix? string
@@ -32,11 +32,11 @@ Static.serve = function(options)
         local public_file_path = public_path .. file_path
         local file = io.open(public_file_path, 'r')
         if not file then
-            return Http.response({ status = Http.Status.NOT_FOUND })
+            return http.response({ status = http.Status.NOT_FOUND })
         end
         local content = file:read('*a')
         file:close()
-        local response = Http.response({ body = content })
+        local response = http.response({ body = content })
         cached[path] = response
         return response
     end
