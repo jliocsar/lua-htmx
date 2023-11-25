@@ -1,7 +1,11 @@
+---@class Htmx
 local Htmx = {}
 
-local source <const> = [[https://unpkg.com/htmx.org]]
+local source <const> = [[static/htmx.min.js]]
 
+---@param head string
+---@param body string
+---@return string
 Htmx.template = function(head, body)
     return [[
         <!DOCTYPE html>

@@ -5,8 +5,12 @@ local Static = require "server.static"
 local HOST <const> = [[0.0.0.0]]
 local PORT <const> = 39179
 
+local serveStatic = Static.serve()
+
+---@param req Request
+---@return string
 local function handleRequest(req)
-    local static = Static.serve(req)
+    local static = serveStatic(req)
     if static then
         return static
     end
@@ -16,10 +20,13 @@ local function handleRequest(req)
     end
     local route = Router[route_name]
     if not route then
-        return Http.response(404, 'Not found')
+        return Http.response({
+            status = Http.Status.NOT_FOUND,
+            body = 'Not found'
+        })
     end
     local response = route(req)
-    return response
+    return Http.response(response)
 end
 
 local server = Http.createServer(HOST, PORT, handleRequest)

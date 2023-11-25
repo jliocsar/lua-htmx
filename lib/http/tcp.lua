@@ -1,9 +1,28 @@
 local uv = require 'luv'
 
+---@class Socket
+---@field bind fun(self: Socket, host: string, port: number)
+---@field listen fun(self: Socket, backlog: number, callback: fun(err: string))
+---@field accept fun(self: Socket, client: Client)
+---@field getsockname fun(self: Socket): unknown?
+---@field close fun(self: Socket)
+---
+---@class Server
+---@field socket Socket
+---@field start fun()
+---
+---@class Client
+---@field read_start fun(self: Client, callback: fun(err: string, data: string))
+---@field write fun(self: Client, data: string, callback: fun(err: string))
+---@field close fun(self: Client)
+
 local BACKLOG <const> = 128
 
+---@class Tcp
 local Tcp = {}
 
+---@param client Client
+---@param on_request fun(req: string): string
 Tcp.handle_connection = function(client, on_request)
   client:read_start(function(read_err, req)
     assert(not read_err, read_err)
@@ -19,6 +38,10 @@ Tcp.handle_connection = function(client, on_request)
   end)
 end
 
+---@param host string
+---@param port number
+---@param on_request fun(req: string): string
+---@return Server
 Tcp.createServer = function(host, port, on_request)
   local socket = uv.new_tcp()
 
