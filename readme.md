@@ -1,3 +1,7 @@
+# lua-htmx
+
+Simple example of a Lua HTTP server serving HTMX/HTML pages.
+
 ## Requirements
 
 - [Lua 5.4](https://www.lua.org/manual/5.4/manual.html)
