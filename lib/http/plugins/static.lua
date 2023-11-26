@@ -1,6 +1,6 @@
 local http = require "lib.http"
 local path = require 'lib.utils.path'
-local compress = require "server.plugins.compression"
+local compress = require "lib.http.plugins.compression"
 
 ---@class StaticOptions
 ---@field prefix? string
