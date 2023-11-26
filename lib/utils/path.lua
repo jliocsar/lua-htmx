@@ -1,7 +1,12 @@
 local Path = {}
 
 Path.getRootPath = function()
-    local pwd = io.popen('pwd'):read('*a'):gsub('\n', '')
+    local proc = io.popen('pwd')
+    if not proc then
+        return nil
+    end
+    local pwd = proc:read('*a'):gsub('\n', '')
+    proc:close()
     return pwd
 end
 
