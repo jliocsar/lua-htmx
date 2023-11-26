@@ -4,6 +4,7 @@ local zlibcomp = require "lib.zlib"
 local Compression = {}
 
 Compression.new = function()
+    ---Blesses a response with gzip compression
     ---@param res Response
     ---@return Response
     return function(res)

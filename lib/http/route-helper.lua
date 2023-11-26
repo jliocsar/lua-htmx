@@ -1,10 +1,13 @@
+local path = require "lib.utils.path"
+
 ---@class RouteHelper
 local RouteHelper = {}
 
 ---@param modname_prefix string
 ---@return table<method, table<string, handler>>
 RouteHelper.findRouters = function(modname_prefix)
-    local find_routers = io.popen("find server/routers -name '*.lua' -type f -exec basename {} .lua \\;")
+    local find_routers = io.popen("find " ..
+        modname_prefix:gsub("%.", "/") .. " -name '*.lua' -type f -exec basename {} .lua \\;")
     if not find_routers then
         error("Failed to find routers")
     end

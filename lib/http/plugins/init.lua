@@ -3,9 +3,6 @@ local http = require "lib.http"
 ---@class HttpPlugins
 local HttpPlugins = {}
 
-HttpPlugins.compression = require "lib.http.plugins.compression"
-HttpPlugins.static = require "lib.http.plugins.static"
-
 ---Applies plugins to a request
 ---@param req Request
 ---@param plugins Plugin[]

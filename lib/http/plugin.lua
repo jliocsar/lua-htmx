@@ -3,9 +3,6 @@
 local Plugin = {}
 
 function Plugin:new()
-    setmetatable(self, {
-        __plugin = true,
-    })
     return self
 end
 

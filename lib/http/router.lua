@@ -6,7 +6,6 @@ HttpRouter = {}
 function HttpRouter:new()
     ---@type table<method, table<string, handler>>
     local initial_metatable = {
-        __router = true,
         get = {},
         post = {},
         put = {},
