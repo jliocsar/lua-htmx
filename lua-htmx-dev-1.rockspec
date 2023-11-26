@@ -8,9 +8,10 @@ description = {
    license = "*** please specify a license ***"
 }
 dependencies = {
+   "etlua >= 1.3",
    "lua >= 5.4",
+   "lua-zlib >= 1.2",
    "luv >= 1.45",
-   "etlua >= 1.3"
 }
 build = {
    type = "builtin",

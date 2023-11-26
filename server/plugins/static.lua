@@ -1,5 +1,6 @@
 local http = require "lib.http"
 local path = require 'lib.utils.path'
+local compress = require "server.plugins.compression"
 
 ---@class StaticOptions
 ---@field prefix? string
@@ -7,7 +8,7 @@ local path = require 'lib.utils.path'
 ---@type table<string, Response>
 local cache = {}
 local public_path = path.resolve 'public'
----@class Static: Middleware
+---@class Static: Plugin
 local Static = {}
 
 ---@param options? StaticOptions
@@ -39,8 +40,9 @@ Static.use = function(options)
         local body = file:read('*a')
         file:close()
         ---@type Response
-        local response = {
+        local response = compress {
             headers = {
+                ['Cache-Control'] = 'max-age=31536000, immutable',
                 ['Content-Type'] = mime_type
             },
             body = body

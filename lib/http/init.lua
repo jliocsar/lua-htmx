@@ -122,10 +122,10 @@ Http.response = function(response)
     local headers = Http.stringifyHeaders(response.headers)
     local payload = "HTTP/1.1 " .. status .. " OK\r\n"
         .. headers
-    if response.headers and not response.headers['Content-Type'] then
-        payload = payload .. "Content-Type: text/plain\r\n"
-    end
     if body then
+        if response.headers and not response.headers['Content-Type'] then
+            payload = payload .. "Content-Type: text/plain\r\n"
+        end
         payload = payload
             .. "Content-Length: "
             .. #body

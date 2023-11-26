@@ -1,7 +1,8 @@
 local http = require "lib.http"
 local htmx = require "lib.htmx"
 local router = require "server.router"
-local middlewares = require "server.middlewares"
+local plugins = require "server.plugins"
+local compress = require "server.plugins.compression"
 
 local DEFAULT_ROUTE <const> = "index"
 local HOST <const> = [[0.0.0.0]]
@@ -20,13 +21,13 @@ end
 
 ---@param req Request
 ---@return string? error?
-local function applyMiddlewares(req)
-    for _, middleware in ipairs(middlewares) do
-        local response, middleware_err = middleware(req)
-        if middleware_err then
+local function applyPlugins(req)
+    for _, plugin in ipairs(plugins) do
+        local response, plugin_err = plugin(req)
+        if plugin_err then
             return http.response {
                 status = http.Status.INTERNAL_SERVER_ERROR,
-                body = middleware_err
+                body = plugin_err
             }
         end
         if response then
@@ -38,9 +39,9 @@ end
 ---@param req Request
 ---@return string
 local function handleRequest(req)
-    local middleware_response = applyMiddlewares(req)
-    if middleware_response then
-        return middleware_response
+    local plugin_response = applyPlugins(req)
+    if plugin_response then
+        return plugin_response
     end
     local route_name = getRouteName(req.path)
     if cache[route_name] then
@@ -57,7 +58,8 @@ local function handleRequest(req)
             status = http.Status.OK
         }
     end
-    return http.response(response)
+    local compressed = compress(response)
+    return http.response(compressed)
 end
 
 local server = http.createServer(HOST, PORT, handleRequest)

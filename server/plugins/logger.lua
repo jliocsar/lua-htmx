@@ -1,3 +1,4 @@
+---@class Logger: Plugin
 local Logger = {}
 
 Logger.use = function()

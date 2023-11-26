@@ -3,3 +3,4 @@
 /lua_modules
 /.luarocks
 /tailwindcss
+/public/*.css
