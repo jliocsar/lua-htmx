@@ -1,14 +1,15 @@
 local zlib = require "zlib"
 
+local GZIP_WINDOW_SIZE <const> = 15 + 16
+
 local ZlibCompression = {}
 
 ---@param value string
 ZlibCompression.compress = function(value, level)
     if not level then
-        level = 9
+        level = 5
     end
-    local windowSize = 15 + 16
-    local compress = zlib.deflate(level, windowSize)
+    local compress = zlib.deflate(level, GZIP_WINDOW_SIZE)
     return compress(value, "finish")
 end
 
