@@ -14,7 +14,7 @@ local function internal_tplb(block)
     return "%<%!%-%-%[" .. block .. "%]%-%-%>"
 end
 
-local layout_file = io.open(path.resolve '/lib/layout.html', "r")
+local layout_file = io.open(path.resolve '/lib/htmx/layout.html', "r")
 if not layout_file then
     error "Could not find layout.html"
 end
