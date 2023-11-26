@@ -5,7 +5,7 @@ local path = require 'lib.utils.path'
 ---@field prefix? string
 
 ---@type table<string, string>
-local cached = {}
+local cache = {}
 local public_path = path.resolve 'public'
 ---@class Static
 local Static = {}
@@ -22,10 +22,10 @@ Static.serve = function(options)
         if not is_static then
             return nil
         end
-        if cached[req_path] then
+        if cache[req_path] then
             return {
                 status = http.Status.NOT_MODIFIED,
-                body = cached[req_path]
+                body = cache[req_path]
             }
         end
         local file_path = req_path:gsub('static/', '')
@@ -34,10 +34,12 @@ Static.serve = function(options)
         if not file then
             return { status = http.Status.NOT_FOUND }
         end
-        local content = file:read('*a')
+        local body = file:read('*a')
         file:close()
-        local response = { body = content }
-        cached[req_path] = content
+        local response = {
+            body = body
+        }
+        cache[req_path] = body
         return response
     end
 end

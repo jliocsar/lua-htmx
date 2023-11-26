@@ -27,8 +27,6 @@ Htmx.readTemplateFile = function(template_path)
     return template
 end
 
----@type table<string, Response>
-local cache = {}
 local layout = Htmx.readTemplateFile "layout.tpl"
 local layout_render = etlua.compile(layout)
 
@@ -43,18 +41,11 @@ end
 ---@param data? table
 ---@return Response, error?
 Htmx.renderFromFile = function(template_path, data)
-    if cache[template_path] then
-        return cache[template_path]
-    end
     local template = Htmx.readTemplateFile(template_path)
     if not template then
         return { status = http.Status.NOT_FOUND }
     end
     local body = Htmx.render(template, data)
-    cache[template_path] = {
-        status = http.Status.NOT_MODIFIED,
-        body = body
-    }
     return {
         body = body
     }
@@ -64,9 +55,6 @@ end
 ---@param options? LayoutOptions
 ---@return Response, error?
 Htmx.layout = function(template_path, options)
-    if cache[template_path] then
-        return cache[template_path]
-    end
     if not options then
         options = {}
     end
@@ -74,10 +62,6 @@ Htmx.layout = function(template_path, options)
     local body = layout_render {
         title = options.title,
         content = template.body
-    }
-    cache[template_path] = {
-        status = http.Status.NOT_MODIFIED,
-        body = body
     }
     return {
         body = body
