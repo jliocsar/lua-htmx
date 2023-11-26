@@ -9,6 +9,7 @@ local tcp = require "lib.http.tcp"
 ---@field method string
 ---@field path string
 ---@field version string
+---@field query table<string, string>
 ---@field headers table<string, string>
 ---@field body string
 
@@ -16,7 +17,7 @@ local tcp = require "lib.http.tcp"
 ---@class Router
 ---@field [route] handler
 
----@alias handler async fun(req: Request): Response | nil
+---@alias handler async fun(req: Request): Response?
 
 local HTTP_REQUEST_HEAD_MATCH <const> = "([A-Z]+) ([^ ]+) HTTP/([0-9.]+)(.+)"
 local HTTP_HEADER_ENTRY_MATCH <const> = "([^:]+):%s([^\r\n]+)"
@@ -68,6 +69,14 @@ local ExtensionMimeTypeMap = {
     webp = Http.MimeType.WEBP,
 }
 
+---@param res Response
+---@param max_age? number
+Http.cached = function(res, max_age)
+    res.headers = res.headers or {}
+    res.headers['Cache-Control'] = 'max-age=' .. (max_age or 3600)
+    return res
+end
+
 ---@param extension extension
 ---@return mimetype?, error?
 Http.extenstionToMimeType = function(extension)
@@ -81,20 +90,31 @@ Http.extenstionToMimeType = function(extension)
     return mime_type
 end
 
+Http.qs = function(query_string)
+    local qs = {}
+    if query_string then
+        for key, value in query_string:gmatch("([^&]+)=([^&]+)") do
+            qs[key] = value
+        end
+    end
+    return qs
+end
+
 ---@param req string
 ---@return Request
 Http.parseRequest = function(req)
-    local method, path, version, raw_headers_with_body = req:match(HTTP_REQUEST_HEAD_MATCH)
+    local method, raw_route_path, version, raw_headers_with_body = req:match(HTTP_REQUEST_HEAD_MATCH)
     local headers_entries = raw_headers_with_body:gmatch(HTTP_HEADER_ENTRY_MATCH)
     local body = raw_headers_with_body:match(HTTP_BODY_MATCH)
-    -- FIXME not working
+    local route_path, query_string = raw_route_path:match("([^?]+)%??(.*)")
     local headers = {}
     for key, value in headers_entries do
         headers[key] = value
     end
     return {
+        query = Http.qs(query_string),
         method = method,
-        path = path,
+        path = route_path,
         version = version,
         headers = headers,
         body = body
