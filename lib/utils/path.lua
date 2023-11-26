@@ -2,7 +2,7 @@ local Path = {}
 
 local proc = io.popen('pwd')
 if not proc then
-    return nil
+    error('Could not get current working directory')
 end
 
 Path.root = proc:read('*a'):gsub('\n', '')
