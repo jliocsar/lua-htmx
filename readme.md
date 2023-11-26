@@ -5,6 +5,7 @@ Simple example of a Lua HTTP server serving HTMX/HTML pages.
 ## Requirements
 
 - [Lua 5.4](https://www.lua.org/manual/5.4/manual.html)
+- [TailwindCSS](https://tailwindcss.com/docs/installation)
 - [`liblua5.4-dev`](https://packages.debian.org/sid/liblua5.4-dev)
 - [`luarocks`](https://luarocks.org/#quick-start)
 

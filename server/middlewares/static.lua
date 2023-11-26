@@ -28,10 +28,21 @@ Static.use = function(options)
         if not file then
             return { status = http.Status.NOT_FOUND }
         end
+        local file_extension = file_path:match('.+%.(.+)$')
+        local mime_type = http.extenstionToMimeType(file_extension)
+        if not mime_type then
+            return {
+                status = http.Status.INTERNAL_SERVER_ERROR,
+                body = "Unknown file extension being sourced"
+            }
+        end
         local body = file:read('*a')
         file:close()
         ---@type Response
         local response = {
+            headers = {
+                ['Content-Type'] = mime_type
+            },
             body = body
         }
         cache[req_path] = response

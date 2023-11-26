@@ -46,6 +46,7 @@ end
 
 ---@param template string
 ---@param data? templatedata
+---@return string
 Htmx.render = function(template, data)
     local render = etlua.compile(template)
     return render(data)
@@ -61,6 +62,9 @@ Htmx.renderFromFile = function(template_path, data)
     end
     local body = Htmx.render(template, data)
     return {
+        headers = {
+            ["Content-Type"] = http.MimeType.HTML
+        },
         body = body
     }
 end
@@ -77,6 +81,9 @@ Htmx.layout = function(template_path, options)
         :gsub(layout.blocks.title, options.title or "Title")
         :gsub(layout.blocks.content, template.body)
     return {
+        headers = {
+            ["Content-Type"] = http.MimeType.HTML
+        },
         body = body
     }
 end

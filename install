@@ -1,15 +1,29 @@
 #!/bin/sh
-cwd=$(pwd)
+version="linux-x64"
 
-sudo apt install -y liblua5.4-dev
+# Uncomment this if you face the `"missing lua.h"` error
+# echo "Installing apt deps"
+# sudo apt install -y liblua5.4-dev
 
-cd /tmp
-wget https://luarocks.org/releases/luarocks-3.9.2.tar.gz
-tar zxpf luarocks-3.9.2.tar.gz
-cd luarocks-3.9.2
-./configure && make && sudo make install
-cd ..
-rm -rf luarocks-3.9.2.tar.gz luarocks-3.9.2
-cd $cwd
+if ! command -v -- "luarocks" > /dev/null 2>&1; then
+  cwd=$(pwd)
+  echo "Installing luarocks"
+  cd /tmp
+  wget https://luarocks.org/releases/luarocks-3.9.2.tar.gz
+  tar zxpf luarocks-3.9.2.tar.gz
+  cd luarocks-3.9.2
+  ./configure && make && sudo make install
+  cd ..
+  rm -rf luarocks-3.9.2.tar.gz luarocks-3.9.2
+  cd $cwd
+fi
 
+if [ ! -f "./tailwindcss" ]; then
+  echo "Installing tailwindcss cli"
+  curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-$version
+  chmod +x tailwindcss-$version
+  mv tailwindcss-$version tailwindcss
+fi
+
+echo "Installing rocks from rockspec"
 luarocks install --only-deps --local ./lua-htmx-dev-1.rockspec

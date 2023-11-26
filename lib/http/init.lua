@@ -36,6 +36,51 @@ Http.Status = {
     INTERNAL_SERVER_ERROR = 500,
 }
 
+---@enum mimetype
+Http.MimeType = {
+    HTML = "text/html",
+    CSS = "text/css",
+    JS = "text/javascript",
+    JSON = "application/json",
+    PNG = "image/png",
+    JPG = "image/jpeg",
+    GIF = "image/gif",
+    SVG = "image/svg+xml",
+    ICO = "image/x-icon",
+    TXT = "text/plain",
+    WEBP = "image/webp",
+}
+
+-- TODO: How to lazily load this?
+---@enum extension
+local ExtensionMimeTypeMap = {
+    html = Http.MimeType.HTML,
+    css = Http.MimeType.CSS,
+    js = Http.MimeType.JS,
+    json = Http.MimeType.JSON,
+    png = Http.MimeType.PNG,
+    jpg = Http.MimeType.JPG,
+    jpeg = Http.MimeType.JPG,
+    gif = Http.MimeType.GIF,
+    svg = Http.MimeType.SVG,
+    ico = Http.MimeType.ICO,
+    txt = Http.MimeType.TXT,
+    webp = Http.MimeType.WEBP,
+}
+
+---@param extension extension
+---@return mimetype?, error?
+Http.extenstionToMimeType = function(extension)
+    if not extension then
+        return nil
+    end
+    local mime_type = ExtensionMimeTypeMap[extension]
+    if not mime_type then
+        return nil, 'Unknown extension'
+    end
+    return mime_type
+end
+
 ---@param req string
 ---@return Request
 Http.parseRequest = function(req)
@@ -45,7 +90,6 @@ Http.parseRequest = function(req)
     -- FIXME not working
     local headers = {}
     for key, value in headers_entries do
-        key = key:lower()
         headers[key] = value
     end
     return {
@@ -77,8 +121,10 @@ Http.response = function(response)
     local body = response.body
     local headers = Http.stringifyHeaders(response.headers)
     local payload = "HTTP/1.1 " .. status .. " OK\r\n"
-        .. "Content-Type: text/html\r\n"
         .. headers
+    if response.headers and not response.headers['Content-Type'] then
+        payload = payload .. "Content-Type: text/plain\r\n"
+    end
     if body then
         payload = payload
             .. "Content-Length: "
