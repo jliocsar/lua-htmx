@@ -15,7 +15,7 @@
 ### Starting HTTP server
 
 ```sh
-./start
+./start [port] # defaults to `39179`
 ```
 
 ## To do

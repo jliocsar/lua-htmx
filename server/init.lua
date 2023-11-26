@@ -5,7 +5,7 @@ local static = require "server.static"
 
 local DEFAULT_ROUTE <const> = "index"
 local HOST <const> = [[0.0.0.0]]
-local PORT <const> = 39179
+local PORT <const> = tonumber(arg[1]) or 39179
 
 ---@type table<string, string>
 local cache = {}
