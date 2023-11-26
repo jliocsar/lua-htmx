@@ -13,6 +13,10 @@ local tcp = require "lib.http.tcp"
 ---@field headers table<string, string>
 ---@field body string
 
+---@class Plugin
+---@field use? async fun(req: Request): Response?
+---@field new? async fun(res: Response): Response?
+
 ---@alias route string
 ---@class Router
 ---@field [route] handler

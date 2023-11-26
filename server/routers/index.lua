@@ -16,7 +16,6 @@ IndexRouter.index = function(req)
     return http.cached(response)
 end
 
-
 IndexRouter.alone = function(req)
     return htmx.renderFromFile("test.tpl", {
         name = "leafo",
