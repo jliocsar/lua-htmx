@@ -1,7 +1,7 @@
 local Route = {}
 
 ---@param modname_prefix string
-Route.getRouters = function(modname_prefix)
+Route.findRouters = function(modname_prefix)
     local find_routers = io.popen("find server/routers -name '*.lua' -type f -exec basename {} .lua \\;")
     if not find_routers then
         error("Failed to find routers")
