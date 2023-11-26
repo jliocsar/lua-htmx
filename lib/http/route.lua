@@ -13,11 +13,11 @@ Route.getRouters = function(modname_prefix)
     for router_name in routers_iter do
         local router_file_name = modname_prefix .. "." .. router_name
         local router = require(router_file_name)
-        for key, value in pairs(router) do
-            if routers[key] then
-                error("Duplicate router key: " .. key)
+        for route, fn in pairs(router) do
+            if routers[route] then
+                error("Duplicate router key: " .. route)
             end
-            routers[key] = value
+            routers[route] = fn
         end
     end
 

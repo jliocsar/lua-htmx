@@ -22,7 +22,7 @@ local function handleRequest(req)
     end
     local route_name = req.path:sub(2)
     if route_name == '' then
-        return DEFAULT_ROUTE
+        route_name = DEFAULT_ROUTE
     end
     if cache[route_name] then
         return cache[route_name]
