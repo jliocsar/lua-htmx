@@ -15,7 +15,7 @@ Simple example of a Lua HTTP server serving HTMX/HTML pages.
 ```sh
 ./install
 # or if you have all dependencies except the rocks
-luarocks install --only-deps --local ./lua-htmx-dev-1.rockspec
+luarocks install --only-deps ./lua-htmx-dev-1.rockspec
 ```
 
 ### Starting HTTP server
