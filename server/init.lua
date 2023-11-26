@@ -1,4 +1,5 @@
 local http = require "lib.http"
+local htmx = require "lib.htmx"
 local router = require "server.router"
 local static = require "server.static"
 
@@ -20,12 +21,15 @@ local function handleRequest(req)
     end
     local route = router[route_name]
     if not route then
-        return http.response {
-            status = http.Status.NOT_FOUND,
-            body = 'Not found'
-        }
+        return http.response(htmx.renderFromFile "404.tpl")
     end
     local response = route(req)
+    if not response then
+        -- all gud just didnt feel like returning a body
+        return http.response {
+            status = http.Status.OK
+        }
+    end
     return http.response(response)
 end
 

@@ -29,7 +29,7 @@ end
 
 ---@type table<string, Response>
 local cache = {}
-local layout = Htmx.readTemplateFile("layout.tpl")
+local layout = Htmx.readTemplateFile "layout.tpl"
 local layout_render = etlua.compile(layout)
 
 ---@param template string
@@ -40,7 +40,7 @@ Htmx.render = function(template, data)
 end
 
 ---@param template_path string
----@param data table
+---@param data? table
 ---@return Response, error?
 Htmx.renderFromFile = function(template_path, data)
     if cache[template_path] then
@@ -61,11 +61,14 @@ Htmx.renderFromFile = function(template_path, data)
 end
 
 ---@param template_path string
----@param options LayoutOptions
+---@param options? LayoutOptions
 ---@return Response, error?
 Htmx.layout = function(template_path, options)
     if cache[template_path] then
         return cache[template_path]
+    end
+    if not options then
+        options = {}
     end
     local template = Htmx.renderFromFile(template_path, options.data)
     local body = layout_render {

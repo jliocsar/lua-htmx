@@ -17,18 +17,18 @@ Static.serve = function(options)
     ---@param req Request
     ---@return Response?
     return function(req)
-        local path = req.path
-        local is_static = path:find("^/" .. prefix .. "/") ~= nil
+        local req_path = req.path
+        local is_static = req_path:find("^/" .. prefix .. "/") ~= nil
         if not is_static then
             return nil
         end
-        if cached[path] then
+        if cached[req_path] then
             return {
                 status = http.Status.NOT_MODIFIED,
-                body = cached[path]
+                body = cached[req_path]
             }
         end
-        local file_path = path:gsub('static/', '')
+        local file_path = req_path:gsub('static/', '')
         local public_file_path = public_path .. file_path
         local file = io.open(public_file_path, 'r')
         if not file then
@@ -37,7 +37,7 @@ Static.serve = function(options)
         local content = file:read('*a')
         file:close()
         local response = { body = content }
-        cached[path] = content
+        cached[req_path] = content
         return response
     end
 end

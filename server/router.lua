@@ -14,13 +14,10 @@ Router.index = function(req)
 end
 
 Router.alone = function(req)
-    local body = htmx.renderFromFile("test.tpl", {
+    return htmx.renderFromFile("test.tpl", {
         name = "leafo",
         items = { "Shoe", "Reflector", "Scarf" }
     })
-    return {
-        body = body
-    }
 end
 
 Router.clicked = function(req)
