@@ -1,4 +1,5 @@
 local http = require "lib.http"
+local http_plugin = require "lib.http.plugin"
 local htmx = require "lib.htmx"
 local router = require "server.router"
 local plugins = require "server.plugins"
@@ -19,27 +20,11 @@ local function getRouteName(req_path)
     return route_name
 end
 
----@param req Request
----@return string? error?
-local function applyPlugins(req)
-    for _, plugin in ipairs(plugins) do
-        local response, plugin_err = plugin(req)
-        if plugin_err then
-            return http.response {
-                status = http.Status.INTERNAL_SERVER_ERROR,
-                body = plugin_err
-            }
-        end
-        if response then
-            return http.response(response)
-        end
-    end
-end
 
 ---@param req Request
 ---@return string
 local function handleRequest(req)
-    local plugin_response = applyPlugins(req)
+    local plugin_response = http_plugin.apply(req, plugins)
     if plugin_response then
         return plugin_response
     end
