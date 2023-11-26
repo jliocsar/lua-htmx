@@ -21,7 +21,6 @@ Compression.new = function()
             end
         end
         local compressed = zlibcomp.compress(original_body)
-        print(compressed)
         return {
             headers = response_headers,
             body = compressed

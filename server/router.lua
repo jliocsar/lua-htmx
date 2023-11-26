@@ -4,13 +4,15 @@ local htmx = require "lib.htmx"
 local Router = {}
 
 Router.index = function(req)
-    return htmx.layout("test.tpl", {
+    local response = htmx.layout("test.tpl", {
         title = 'Index',
         data = {
             name = "leafo",
             items = { "Shoe", "Reflector", "Scarf" }
         }
     })
+    response.headers['Cache-Control'] = 'max-age=3600'
+    return response
 end
 
 Router.alone = function(req)

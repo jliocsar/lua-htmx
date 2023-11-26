@@ -1,6 +1,7 @@
 local etlua = require "etlua"
 local http = require "lib.http"
 local path = require "lib.utils.path"
+local html = require "lib.utils.html"
 
 ---@alias templatedata table<string, unknown>
 ---@alias error string
@@ -23,7 +24,7 @@ local layout = {
         title = internal_tplb "title",
         content = internal_tplb "content"
     },
-    file_content = layout_file:read "*a"
+    file_content = html.minify(layout_file:read "*a")
 }
 layout_file:close()
 local templates_path = path.resolve '/server/templates'
@@ -49,7 +50,8 @@ end
 ---@return string
 Htmx.render = function(template, data)
     local render = etlua.compile(template)
-    return render(data)
+    local rendered = render(data)
+    return html.minify(rendered)
 end
 
 ---@param template_path string

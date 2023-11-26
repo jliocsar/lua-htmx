@@ -27,5 +27,5 @@ luarocks install --only-deps --local ./lua-htmx-dev-1.rockspec
 
 - [x] gzip compression;
 - [ ] minify css/html;
-- [ ] improve caching layer (headers, static requests etc);
+- [x] improve caching layer (headers, static requests etc);
 - [ ] mongodb connection.
