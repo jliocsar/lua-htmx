@@ -26,4 +26,4 @@ if [ ! -f "./tailwindcss" ]; then
 fi
 
 echo "Installing rocks from rockspec"
-luarocks install --only-deps --local ./lua-htmx-dev-1.rockspec
+./luarocks install --only-deps --local ./lua-htmx-dev-1.rockspec
