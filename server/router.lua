@@ -1,3 +1,3 @@
-local route = require "lib.http.route"
-local router = route.findRouters "server.routers"
+local route_helper = require "lib.http.route-helper"
+local router = route_helper.findRouters "server.routers"
 return router

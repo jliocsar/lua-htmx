@@ -4,17 +4,34 @@ local htmx = require "lib.htmx"
 local router = require "server.router"
 
 local DEFAULT_ROUTE <const> = "index"
-local HOST <const> = [[0.0.0.0]]
-local PORT <const> = tonumber(arg[1]) or 39179
 
-local plugins = {
-    http_plugins.static.use(),
+local App = {
+    ---@type table<string, (Plugin | Router)[]>
+    usable = {}
 }
 
----@param req Request
----@return string
-local function handleRequest(req)
-    local plugin_response = http_plugins.apply(req, plugins)
+function App:new()
+    return self
+end
+
+---@param pluginOrRouter Plugin | Router
+function App:use(pluginOrRouter)
+    table.insert(self.usable, pluginOrRouter)
+end
+
+function App:onRequest(req)
+    local plugins = {}
+    local routers = {}
+    for _, usable in ipairs(self.usable) do
+        local metatable = getmetatable(usable)
+        local is_plugin = metatable.__plugin
+        if is_plugin then
+            table.insert(plugins, usable)
+        else
+            table.insert(routers, usable)
+        end
+    end
+    local plugin_response = http_plugins.apply(req, self.usable)
     if plugin_response then
         return plugin_response
     end
@@ -42,5 +59,4 @@ local function handleRequest(req)
     return http.response(compressed)
 end
 
-local server = http.createServer(HOST, PORT, handleRequest)
-server:start()
+return App

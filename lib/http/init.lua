@@ -13,11 +13,8 @@ local tcp = require "lib.http.tcp"
 ---@field headers table<string, string>
 ---@field body string
 
----@class Plugin
----@field use? async fun(req: Request): Response?
----@field new? async fun(res: Response): Response?
-
 ---@alias route string
+---@alias method 'get' | 'post' | 'put' | 'delete' | 'head' | 'options' | 'patch' | 'trace' | 'connect'
 ---@class Router
 ---@field [route] handler
 
@@ -73,6 +70,7 @@ local ExtensionMimeTypeMap = {
     webp = Http.MimeType.WEBP,
 }
 
+---Blesses a response with a cache-control header
 ---@param res Response
 ---@param max_age? number
 Http.cached = function(res, max_age)
@@ -138,6 +136,7 @@ Http.stringifyHeaders = function(headers)
     return str_headers
 end
 
+---Converts a `Response` to a string
 ---@param response Response
 ---@return string
 Http.response = function(response)

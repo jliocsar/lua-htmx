@@ -1,26 +1,22 @@
 local http = require "lib.http"
+local HttpRouter = require "lib.http.router"
 local htmx = require "lib.htmx"
+
 local test = require "server.db.models.test"
 
----@type Router
-local IndexRouter = {}
+local testRouter = HttpRouter:new()
 
-IndexRouter.index = function(req)
-    local foo = req.query.foo
-    local cursor = test:find({
-        foo = foo
-    })
-    local items = {}
-    for doc in cursor:iterator() do
-        if doc.foo then
-            table.insert(items, doc.foo)
-        end
+testRouter:get('index', function(req)
+    local cursor = test:find({ foo = req.query.foo })
+    local things = {}
+    for thing in cursor:iterator() do
+        table.insert(things, thing.foo)
     end
     local response, err = htmx.layout("test.tpl", {
         title = 'Index',
         data = {
-            name = foo or "mentals",
-            items = items
+            name = "mentals",
+            items = things
         }
     })
     if err then
@@ -30,13 +26,6 @@ IndexRouter.index = function(req)
         }
     end
     return http.cached(response)
-end
+end)
 
-IndexRouter.alone = function(req)
-    return htmx.renderFromFile("test.tpl", {
-        name = "leafo",
-        items = { "Shoe", "Reflector", "Scarf" }
-    })
-end
-
-return IndexRouter
+return testRouter

@@ -102,4 +102,17 @@ Htmx.layout = function(template_path, options)
     }
 end
 
+Htmx.render404 = function()
+    local four_oh_four, render_err = Htmx.renderFromFile "404.tpl"
+    if not four_oh_four then
+        return http.response({
+            status = http.Status.NOT_FOUND,
+            body = tostring(render_err)
+        })
+    end
+    local response = http.cached(four_oh_four)
+    response.status = http.Status.NOT_FOUND
+    return http.response(response)
+end
+
 return Htmx
