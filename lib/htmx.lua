@@ -9,7 +9,24 @@ local path = require "lib.utils.path"
 ---@field data? templatedata
 ---@field title? string
 
-local templates_path = path.resolve 'server/templates'
+---@param block string
+local function internal_tplb(block)
+    return "%<%!%-%-%[" .. block .. "%]%-%-%>"
+end
+
+local layout_file = io.open(path.resolve '/lib/layout.html', "r")
+if not layout_file then
+    error "Could not find layout.html"
+end
+local layout = {
+    blocks = {
+        title = internal_tplb "title",
+        content = internal_tplb "content"
+    },
+    file_content = layout_file:read "*a"
+}
+layout_file:close()
+local templates_path = path.resolve '/server/templates'
 
 ---@class Htmx
 local Htmx = {}
@@ -26,9 +43,6 @@ Htmx.readTemplateFile = function(template_path)
     file:close()
     return template
 end
-
-local layout = Htmx.readTemplateFile "layout.tpl"
-local layout_render = etlua.compile(layout)
 
 ---@param template string
 ---@param data? templatedata
@@ -59,10 +73,9 @@ Htmx.layout = function(template_path, options)
         options = {}
     end
     local template = Htmx.renderFromFile(template_path, options.data)
-    local body = layout_render {
-        title = options.title,
-        content = template.body
-    }
+    local body = layout.file_content
+        :gsub(layout.blocks.title, options.title or "Title")
+        :gsub(layout.blocks.content, template.body)
     return {
         body = body
     }
