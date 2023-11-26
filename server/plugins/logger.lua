@@ -3,7 +3,8 @@ local Logger = {}
 
 Logger.use = function()
     return function(req)
-        print(req.method .. ' ' .. req.path .. os.date(' %Y-%m-%d %H:%M:%S'))
+        local now = os.date(' %Y-%m-%d %H:%M:%S')
+        print(req.method .. ' ' .. req.path .. now)
     end
 end
 

@@ -16,8 +16,8 @@ Compression.new = function()
             ['Content-Encoding'] = 'gzip'
         }
         if original_headers then
-            for k, v in pairs(original_headers) do
-                response_headers[k] = v
+            for header, value in pairs(original_headers) do
+                response_headers[header] = value
             end
         end
         local compressed = zlibcomp.compress(original_body)

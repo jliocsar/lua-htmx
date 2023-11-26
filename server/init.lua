@@ -29,7 +29,14 @@ local function handleRequest(req)
     end
     local route = router[route_name]
     if not route then
-        return http.response(htmx.renderFromFile "404.tpl")
+        local four_oh_four, render_err = htmx.renderFromFile "404.tpl"
+        if not four_oh_four then
+            return http.response({
+                status = http.Status.NOT_FOUND,
+                body = tostring(render_err)
+            })
+        end
+        return http.response(four_oh_four)
     end
     local response = route(req)
     if not response then
