@@ -1,5 +1,6 @@
 local http = require "lib.http"
 
+---@class HttpPlugins
 local HttpPlugins = {}
 
 HttpPlugins.compression = require "lib.http.plugins.compression"

@@ -5,6 +5,9 @@ version="linux-x64"
 # echo "Installing apt deps"
 # sudo apt install -y liblua5.4-dev
 
+# Uncomment this if you face any BSON/MongoDB related errors
+# sudo apt install -y libbson-dev libmongoc-dev
+
 if ! command -v -- "luarocks" > /dev/null 2>&1; then
   cwd=$(pwd)
   echo "Installing luarocks"

@@ -1,3 +1,4 @@
+---@class Route
 local Route = {}
 
 ---@param modname_prefix string

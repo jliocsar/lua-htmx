@@ -1,3 +1,4 @@
+---@class Path
 local Path = {}
 
 local proc = io.popen('pwd')

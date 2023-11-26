@@ -10,8 +10,9 @@ description = {
 dependencies = {
    "etlua >= 1.3",
    "lua >= 5.4",
+   "lua-mongo >= 1.2",
    "lua-zlib >= 1.2",
-   "luv >= 1.45",
+   "luv >= 1.45"
 }
 build = {
    type = "builtin",

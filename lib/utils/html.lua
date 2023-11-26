@@ -1,3 +1,4 @@
+---@class Html
 local Html = {}
 
 Html.minify = function(html)

@@ -4,3 +4,6 @@
 /.luarocks
 /tailwindcss
 /public/*.css
+/.env
+/.env.local
+/.env.development.local

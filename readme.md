@@ -5,6 +5,7 @@ Simple example of a Lua HTTP server serving HTMX/HTML pages.
 ## Requirements
 
 - [`luarocks`](https://luarocks.org/#quick-start)
+- [`mongo-c-driver`](https://github.com/mongodb/mongo-c-driver)
 - [TailwindCSS](https://tailwindcss.com/docs/installation)
 
 ## Instructions

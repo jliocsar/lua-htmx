@@ -47,22 +47,28 @@ end
 
 ---@param template string
 ---@param data? templatedata
----@return string
+---@return string?, error?
 Htmx.render = function(template, data)
     local render = etlua.compile(template)
+    if not render then
+        return nil, "Failed to compile template"
+    end
     local rendered = render(data)
     return html.minify(rendered)
 end
 
 ---@param template_path string
 ---@param data? table
----@return Response, error?
+---@return Response?, error?
 Htmx.renderFromFile = function(template_path, data)
     local template = Htmx.readTemplateFile(template_path)
     if not template then
         return { status = http.Status.NOT_FOUND }
     end
-    local body = Htmx.render(template, data)
+    local body, render_err = Htmx.render(template, data)
+    if not body then
+        return nil, render_err
+    end
     return {
         headers = {
             ["Content-Type"] = http.MimeType.HTML
@@ -78,7 +84,13 @@ Htmx.layout = function(template_path, options)
     if not options then
         options = {}
     end
-    local template = Htmx.renderFromFile(template_path, options.data)
+    local template, render_err = Htmx.renderFromFile(template_path, options.data)
+    if not template then
+        print(render_err)
+        return {
+            status = http.Status.INTERNAL_SERVER_ERROR,
+        }
+    end
     local body = layout.file_content
         :gsub(layout.blocks.title, options.title or "Title")
         :gsub(layout.blocks.content, template.body)
