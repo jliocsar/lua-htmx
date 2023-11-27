@@ -40,11 +40,13 @@ function Htmx:new(templates_root)
     return self
 end
 
+---@private
 function Htmx:readLayoutTemplateFile()
     return self:readTemplateFile "layout.tpl"
 end
 
 ---@async
+---@private
 ---@param template_path string
 ---@return string?, error?
 function Htmx:readTemplateFile(template_path)

@@ -16,6 +16,7 @@ function HttpRouter:new()
     return self
 end
 
+---@private
 ---@param method method
 local function createMethodHandler(method)
     ---@param route route

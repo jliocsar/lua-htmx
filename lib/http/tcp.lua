@@ -21,9 +21,10 @@ local BACKLOG <const> = 128
 ---@class Tcp
 local Tcp = {}
 
+---@private
 ---@param client Client
 ---@param on_request fun(req: string): string
-Tcp.handle_connection = function(client, on_request)
+Tcp.handleConnection = function(client, on_request)
   client:read_start(function(read_err, req)
     assert(not read_err, read_err)
     local response = on_request(req)
@@ -50,7 +51,7 @@ Tcp.createServer = function(host, port, on_request)
     assert(not err, err)
     local client = uv.new_tcp()
     socket:accept(client)
-    Tcp.handle_connection(client, on_request)
+    Tcp.handleConnection(client, on_request)
   end)
 
   local function start()
