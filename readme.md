@@ -1,6 +1,18 @@
 # lua-htmx
 
-Simple example of a Lua HTTP server serving HTMX/HTML pages.
+🌔 Simple example of a Lua HTTP server serving HTMX/HTML pages.
+
+## Structure
+
+- `config/`: Contains `.lua` files with app-related configurations, such as the port number etc;
+- `lib/`: Has all dependencies to build & bootstrap an HTTP server with routes, plugins and such. This folder is _and should be_ separated of all the server business logic; It is a framework _per se_;
+- `public/`: The folder server as the static directory from the HTTP server by default;
+- `server/`: The application itself;
+- `install`: Installs all dependencies to run the server (rocks, `tailwindcss/cli` etc);
+- `build`: Builds the app styles with Tailwind's CLI;
+- `start`: Starts the HTTP server;
+- `watch`: Starts the HTTP server in watch mode;
+- `dev`: Runs both `build` in watch mode and `watch`.
 
 ## Requirements
 
@@ -19,15 +31,16 @@ Simple example of a Lua HTTP server serving HTMX/HTML pages.
 luarocks install --only-deps ./lua-htmx-dev-1.rockspec
 ```
 
-### Starting HTTP server
+### Starting the HTTP server
 
 ```sh
 ./start [port] # defaults to `39179`
 ```
 
-## To do
+### Development
 
-- [x] gzip compression;
-- [x] minify css/html;
-- [x] improve caching layer (headers, static requests etc);
-- [x] mongodb connection.
+This command will start the `tailwindcss` build in `--watch` mode; it'll also run the HTTP server in watch mode, meaning it'll restart on every file change detected.
+
+```sh
+./dev [port]
+```
