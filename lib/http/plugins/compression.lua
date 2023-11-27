@@ -14,7 +14,7 @@ Compression.new = function()
         end
         local original_headers = res.headers
         local response_headers = {
-            ['Content-Encoding'] = 'gzip'
+            ["Content-Encoding"] = "gzip"
         }
         if original_headers then
             for header, value in pairs(original_headers) do

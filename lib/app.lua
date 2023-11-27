@@ -47,7 +47,7 @@ function App:onRequest(req)
         return plugin_response
     end
     local route_name = req.path:sub(2)
-    if route_name == '' then
+    if route_name == "" then
         route_name = DEFAULT_ROUTE
     end
     local method = req.method:lower()

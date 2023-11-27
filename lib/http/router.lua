@@ -1,5 +1,5 @@
 ---@type method[]
-local supported_methods = { 'get', 'post', 'put', 'delete', 'patch' }
+local supported_methods = { "get", "post", "put", "delete", "patch" }
 
 HttpRouter = {}
 

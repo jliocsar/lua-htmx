@@ -14,7 +14,7 @@ local tcp = require "lib.http.tcp"
 ---@field body string
 
 ---@alias route string
----@alias method 'get' | 'post' | 'put' | 'delete' | 'head' | 'options' | 'patch' | 'trace' | 'connect'
+---@alias method "get" | "post" | "put" | "delete" | "head" | "options" | "patch" | "trace" | "connect"
 ---@class Router
 ---@field [route] handler
 
@@ -75,7 +75,7 @@ local ExtensionMimeTypeMap = {
 ---@param max_age? number
 Http.cached = function(res, max_age)
     res.headers = res.headers or {}
-    res.headers['Cache-Control'] = 'max-age=' .. (max_age or 3600)
+    res.headers["Cache-Control"] = "max-age=" .. (max_age or 3600)
     return res
 end
 
@@ -87,7 +87,7 @@ Http.extenstionToMimeType = function(extension)
     end
     local mime_type = ExtensionMimeTypeMap[extension]
     if not mime_type then
-        return nil, 'Unknown extension'
+        return nil, "Unknown extension"
     end
     return mime_type
 end
@@ -146,7 +146,7 @@ Http.response = function(response)
     local payload = "HTTP/1.1 " .. status .. " OK\r\n"
         .. headers
     if body then
-        if response.headers and not response.headers['Content-Type'] then
+        if response.headers and not response.headers["Content-Type"] then
             payload = payload .. "Content-Type: text/plain\r\n"
         end
         payload = payload

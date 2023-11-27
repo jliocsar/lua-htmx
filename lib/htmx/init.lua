@@ -10,8 +10,8 @@ local html = require "lib.utils.html"
 ---@field data? templatedata
 ---@field title? string
 
-local DEFAULT_LAYOUT_ROOT_PATH <const> = path.resolve 'lib/htmx'
-local DEFAULT_TEMPLATES_ROOT <const> = 'server/templates'
+local DEFAULT_LAYOUT_ROOT_PATH <const> = path.resolve "lib/htmx"
+local DEFAULT_TEMPLATES_ROOT <const> = "server/templates"
 
 ---@class Htmx
 ---@field templates_root string
@@ -50,7 +50,7 @@ end
 ---@param template_path string
 ---@return string?, error?
 function Htmx:readTemplateFile(template_path)
-    local file = io.open(self.templates_root .. '/' .. template_path, "r")
+    local file = io.open(self.templates_root .. "/" .. template_path, "r")
     if not file then
         return nil, "Template not found: " .. template_path
     end

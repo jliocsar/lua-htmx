@@ -6,14 +6,14 @@ local test = require "server.db.models.test"
 
 local testRouter = HttpRouter:new()
 
-testRouter:get('index', function(req)
+testRouter:get("index", function(req)
     local cursor = test:find({ foo = req.query.foo })
     local things = {}
     for thing in cursor:iterator() do
         table.insert(things, thing.foo)
     end
     local response, err = htmx:layout("test.tpl", {
-        title = 'Index',
+        title = "Index",
         data = {
             name = "mentals",
             items = things

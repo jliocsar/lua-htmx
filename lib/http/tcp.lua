@@ -1,4 +1,4 @@
-local uv = require 'luv'
+local uv = require "luv"
 
 ---@class Socket
 ---@field bind fun(self: Socket, host: string, port: number)
