@@ -5,7 +5,7 @@ local htmx = require "server.htmx"
 
 ---@class AppOptions
 ---@field host string
----@field port number
+---@field port integer
 ---Path to get the routes from
 ---@field routers string
 

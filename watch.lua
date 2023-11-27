@@ -1,8 +1,12 @@
 local lfs = require "lfs"
+local signal = require "posix.signal"
+
+local config = require "config.const"
+local term = require "lib.utils.term"
 
 local git_ignore_file = io.open(".gitignore", "r")
 if not git_ignore_file then
-  print("No .gitignore file found")
+  print(term.colors.red_bright("No .gitignore file found"))
   os.exit(1)
 end
 local git_ignore = git_ignore_file:read "*a"
@@ -24,11 +28,11 @@ local function is_ignored(path)
   return path == ".." or path == "." or ignored:find(path)
 end
 
----@type table<string, number>
+---@type table<string, integer>
 local last_modified_cached = {}
 
 ---@param where string
----@param callback fun(last_modified: number)
+---@param callback fun(last_modified: integer)
 local function notify_on_change(where, callback)
   local iter, dir = lfs.dir(where)
   for target in iter, dir do
@@ -36,14 +40,13 @@ local function notify_on_change(where, callback)
       local target_path = where .. "/" .. target
       local target_attr = lfs.attributes(target_path)
       if target_attr == nil then
-        print("Failed to get attributes for " .. target)
+        print(term.colors.red_bright("Failed to get attributes for " .. target))
         os.exit(1)
       end
       if is_file(target_attr.mode) then
         local last_modified = target_attr.modification
         local cached = last_modified_cached[target_path]
         if cached and cached < last_modified then
-          print("boink")
           callback(last_modified)
         end
         last_modified_cached[target_path] = last_modified
@@ -56,7 +59,7 @@ local function notify_on_change(where, callback)
 end
 
 ---@param where string
----@param callback fun(last_modified: number)
+---@param callback fun(last_modified: integer)
 local function watch(where, callback)
   notify_on_change(where, callback)
   return watch(where, callback)
@@ -70,29 +73,29 @@ function Dev:new()
 end
 
 function Dev:run()
-  os.execute("./start &")
+  os.execute("./start -LUA_HTMX=1 &")
 end
 
 function Dev:stop()
-  local pid_proc = assert(io.popen("pgrep --full './bin/sh start'", "r"))
-  local pid = pid_proc:read "*a"
-  pid_proc:close()
-  if pid == "" then
-    print("No server running")
-    os.exit(1)
-  end
-  os.execute("kill " .. pid)
+  os.execute("kill $(lsof -t -i:" .. config.PORT .. ")")
 end
 
 function Dev:restart()
   self:stop()
-  self:run()
+  return self:run()
 end
 
 local dev = Dev:new()
 local where = arg[1] or "."
-watch(where, function()
-  print("File changed, restarting server")
-  -- dev:restart()
+
+signal.signal(signal.SIGINT, function(signum)
+  print(term.colors.yellow_bright("Stopping server"))
+  dev:stop()
+  os.exit(128 + signum)
 end)
 dev:run()
+
+watch(where, function()
+  print(term.colors.blue_bright("File changed, restarting server"))
+  dev:restart()
+end)

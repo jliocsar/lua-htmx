@@ -1,8 +1,10 @@
 local uv = require "luv"
 
+local term = require "lib.utils.term"
+
 ---@class Socket
----@field bind fun(self: Socket, host: string, port: number)
----@field listen fun(self: Socket, backlog: number, callback: fun(err: string))
+---@field bind fun(self: Socket, host: string, port: integer)
+---@field listen fun(self: Socket, backlog: integer, callback: fun(err: string))
 ---@field accept fun(self: Socket, client: Client)
 ---@field getsockname fun(self: Socket): unknown?
 ---@field close fun(self: Socket)
@@ -40,7 +42,7 @@ Tcp.handleConnection = function(client, on_request)
 end
 
 ---@param host string
----@param port number
+---@param port integer
 ---@param on_request fun(req: string): string
 ---@return Server
 Tcp.createServer = function(host, port, on_request)
@@ -57,10 +59,11 @@ Tcp.createServer = function(host, port, on_request)
   local function start()
     local current = socket:getsockname()
     if not current then
-      print(("Could not start server, is the port %d available?"):format(port))
+      print(term.colors.red_bright("Could not start server, is the port %d available?\n"):format(port))
       os.exit(98)
     end
-    print("HTTP server listening on " .. host .. ":" .. port)
+    term.resetTerm()
+    print(term.colors.bold(term.colors.cyan_bright("Server listening on %s:%d")):format(host, port))
     uv.run()
   end
 

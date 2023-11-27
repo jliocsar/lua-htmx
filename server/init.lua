@@ -1,15 +1,13 @@
 local App = require "lib.app"
-
 local static = require "lib.http.plugins.static"
 local compression = require "lib.http.plugins.compression"
+
+local config = require "config.const"
 local logger = require "server.plugins.logger"
 
-local HOST <const> = [[0.0.0.0]]
-local PORT <const> = tonumber(arg[1]) or 39179
-
 local app = App:new({
-    host = HOST,
-    port = PORT,
+    host = config.HOST,
+    port = config.PORT,
     routers = "server.routers"
 })
 

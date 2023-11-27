@@ -6,8 +6,9 @@ local RouteHelper = {}
 ---@param modname_prefix string
 ---@return table<method, table<string, handler>>
 RouteHelper.findRouters = function(modname_prefix)
-    local find_routers = io.popen("find " ..
-        modname_prefix:gsub("%.", "/") .. " -name '*.lua' -type f -exec basename {} .lua \\;")
+    local find_target_path = modname_prefix
+        :gsub("%.", "/")
+    local find_routers = io.popen(("find %s -name '*.lua' -type f -exec basename {} .lua \\;"):format(find_target_path))
     assert(find_routers, "Failed to find routers")
     local routers_iter = find_routers:read("*a"):gmatch("[^\n]+")
     find_routers:close()
@@ -15,7 +16,7 @@ RouteHelper.findRouters = function(modname_prefix)
     ---@type table<method, handler[]>
     local routers = {}
     for router_name in routers_iter do
-        local router_file_name = modname_prefix .. "." .. router_name
+        local router_file_name = ("%s.%s"):format(modname_prefix, router_name)
         local router = require(router_file_name)
         ---@type table<method, table<string, handler>>
         local router_meta = getmetatable(router)

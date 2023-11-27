@@ -39,6 +39,17 @@ Http.Status = {
     INTERNAL_SERVER_ERROR = 500,
 }
 
+---@enum statusname
+Http.StatusName = {
+    [Http.Status.OK] = "OK",
+    [Http.Status.NOT_MODIFIED] = "Not Modified",
+    [Http.Status.BAD_REQUEST] = "Bad Request",
+    [Http.Status.UNAUTHORIZED] = "Unauthorized",
+    [Http.Status.FORBIDDEN] = "Forbidden",
+    [Http.Status.NOT_FOUND] = "Not Found",
+    [Http.Status.INTERNAL_SERVER_ERROR] = "Internal Server Error",
+}
+
 ---@enum mimetype
 Http.MimeType = {
     HTML = "text/html",
@@ -73,10 +84,10 @@ local ExtensionMimeTypeMap = {
 
 ---Blesses a response with a cache-control header
 ---@param res Response
----@param max_age? number
+---@param max_age? integer
 Http.cached = function(res, max_age)
     res.headers = res.headers or {}
-    res.headers["Cache-Control"] = "max-age=" .. (max_age or 3600)
+    res.headers["Cache-Control"] = ("max-age=%d"):format(max_age or 3600)
     return res
 end
 
@@ -144,15 +155,19 @@ Http.response = function(response)
     local status = response.status or Http.Status.OK
     local body = response.body
     local headers = Http.stringifyHeaders(response.headers)
-    local payload = "HTTP/1.1 " .. status .. " OK\r\n"
+    local status_name = Http.StatusName[status]
+    if not status_name then
+        status = Http.Status.INTERNAL_SERVER_ERROR
+        status_name = Http.StatusName[status]
+    end
+    local payload = ("HTTP/1.1 %d %s\r\n"):format(status, status_name)
         .. headers
     if body then
         if response.headers and not response.headers["Content-Type"] then
             payload = payload .. "Content-Type: text/plain\r\n"
         end
         payload = payload
-            .. "Content-Length: "
-            .. #body
+            .. ("Content-Length: %d"):format(#body)
             .. "\r\n\r\n"
             .. body
     else
@@ -162,7 +177,7 @@ Http.response = function(response)
 end
 
 ---@param host string
----@param port number
+---@param port integer
 ---@param on_request fun(req: Request): string
 ---@return Server
 Http.createServer = function(host, port, on_request)

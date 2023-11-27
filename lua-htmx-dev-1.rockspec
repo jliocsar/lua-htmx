@@ -14,6 +14,7 @@ dependencies = {
    "lua >= 5.4",
    "luafilesystem >= 1.8",
    "lua-mongo >= 1.2",
+   "luaposix >= 36.1",
    "lua-zlib >= 1.2",
    "luv >= 1.45"
 }
