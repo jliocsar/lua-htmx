@@ -1,2 +1,2 @@
 #!/bin/sh
-./tailwindcss -i ./lib/tailwind.css -o public/app.css
+./tailwindcss -i ./lib/tailwind.css -o public/app.css $@

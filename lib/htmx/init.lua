@@ -4,7 +4,6 @@ local path = require "lib.utils.path"
 local html = require "lib.utils.html"
 
 ---@alias templatedata table<string, unknown>
----@alias error string
 
 ---@class LayoutOptions
 ---@field data? templatedata
@@ -32,10 +31,7 @@ function Htmx:new(templates_root)
         layout_content = self:readLayoutTemplateFile()
         self.templates_root = tmp
     end
-    local compiled_layout = etlua.compile(layout_content)
-    if not compiled_layout then
-        error "Failed to compile layout template"
-    end
+    local compiled_layout = assert(etlua.compile(layout_content), "Failed to compile layout template")
     self.layout_render = compiled_layout
     return self
 end

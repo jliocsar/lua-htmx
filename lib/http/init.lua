@@ -13,6 +13,7 @@ local tcp = require "lib.http.tcp"
 ---@field headers table<string, string>
 ---@field body string
 
+---@alias error string
 ---@alias route string
 ---@alias method "get" | "post" | "put" | "delete" | "head" | "options" | "patch" | "trace" | "connect"
 ---@class Router

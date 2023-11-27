@@ -1,10 +1,7 @@
 ---@class Path
 local Path = {}
 
-local proc = io.popen("pwd")
-if not proc then
-    error("Could not get current working directory")
-end
+local proc = assert(io.popen("pwd"), "Could not get current working directory")
 
 Path.root = proc:read("*a"):gsub("\n", "")
 proc:close()

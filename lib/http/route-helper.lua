@@ -8,9 +8,7 @@ local RouteHelper = {}
 RouteHelper.findRouters = function(modname_prefix)
     local find_routers = io.popen("find " ..
         modname_prefix:gsub("%.", "/") .. " -name '*.lua' -type f -exec basename {} .lua \\;")
-    if not find_routers then
-        error("Failed to find routers")
-    end
+    assert(find_routers, "Failed to find routers")
     local routers_iter = find_routers:read("*a"):gmatch("[^\n]+")
     find_routers:close()
 
@@ -22,7 +20,6 @@ RouteHelper.findRouters = function(modname_prefix)
         ---@type table<method, table<string, handler>>
         local router_meta = getmetatable(router)
         for method, handlers in pairs(router_meta) do
-            -- TODO: perhaps iterate all methods to create objects beforehand
             if not routers[method] then
                 routers[method] = {}
             end

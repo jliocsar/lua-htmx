@@ -1,3 +1,4 @@
+rockspec_format = "3.0"
 package = "lua-htmx"
 version = "dev-1"
 source = {
@@ -8,17 +9,11 @@ description = {
    license = "*** please specify a license ***"
 }
 dependencies = {
+   "emitter >= 0.0.3",
    "etlua >= 1.3",
    "lua >= 5.4",
+   "luafilesystem >= 1.8",
    "lua-mongo >= 1.2",
    "lua-zlib >= 1.2",
    "luv >= 1.45"
-}
-build = {
-   type = "builtin",
-   modules = {
-      htmx = "lib/htmx.lua",
-      ["http.init"] = "lib/http/init.lua",
-      ["http.tcp"] = "lib/http/tcp.lua"
-   }
 }
