@@ -3,8 +3,6 @@ local http_plugins = require "lib.http.plugins"
 local route_helper = require "lib.http.route-helper"
 local htmx = require "server.htmx"
 
-local DEFAULT_ROUTE <const> = "index"
-
 ---@class AppOptions
 ---@field host string
 ---@field port number
@@ -46,10 +44,8 @@ function App:onRequest(req)
     if plugin_response then
         return plugin_response
     end
-    local route_name = req.path:sub(2)
-    if route_name == "" then
-        route_name = DEFAULT_ROUTE
-    end
+    -- TODO: Allow things like `[:id]` etc in the path
+    local route_name = req.path
     local method = req.method:lower()
     local handlers = self.routers[method]
     local route = handlers[route_name]

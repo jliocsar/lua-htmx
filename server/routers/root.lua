@@ -1,17 +1,14 @@
 local http = require "lib.http"
 local HttpRouter = require "lib.http.router"
+
 local htmx = require "server.htmx"
+local ThingService = require "server.services.thing-service"
 
-local test = require "server.db.models.test"
+local thing_service = ThingService:new()
+local root_router = HttpRouter:new()
 
-local testRouter = HttpRouter:new()
-
-testRouter:get("index", function(req)
-    local cursor = test:find({ foo = req.query.foo })
-    local things = {}
-    for thing in cursor:iterator() do
-        table.insert(things, thing.foo)
-    end
+root_router:get("/", function(req)
+    local things = thing_service:list({ foo = req.query.foo })
     local response, err = htmx:layout("test.tpl", {
         title = "Index",
         data = {
@@ -28,4 +25,4 @@ testRouter:get("index", function(req)
     return http.cached(response)
 end)
 
-return testRouter
+return root_router
