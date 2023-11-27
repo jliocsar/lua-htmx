@@ -1,6 +1,12 @@
 # lua-htmx
 
-🌔 Simple example of a Lua HTTP server serving HTMX/HTML pages.
+HTTP server built on top of [luv](https://github.com/luvit/luv) focused in high-performance.
+
+- File-system routing for easy definition of new routes;
+- Responses compressed with [zlib](https://www.zlib.net/);
+- APIs for common use cases (HTTP, HTMX, routing, path resolving, plugins and such).
+
+👷‍♂️ **Work in progress!**
 
 ## Structure
 
