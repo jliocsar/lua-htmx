@@ -1,6 +1,6 @@
 local http = require "lib.http"
 local HttpRouter = require "lib.http.router"
-local htmx = require "lib.htmx"
+local htmx = require "server.htmx"
 
 local test = require "server.db.models.test"
 
@@ -12,7 +12,7 @@ testRouter:get('index', function(req)
     for thing in cursor:iterator() do
         table.insert(things, thing.foo)
     end
-    local response, err = htmx.layout("test.tpl", {
+    local response, err = htmx:layout("test.tpl", {
         title = 'Index',
         data = {
             name = "mentals",

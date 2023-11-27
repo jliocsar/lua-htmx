@@ -10,33 +10,45 @@ local html = require "lib.utils.html"
 ---@field data? templatedata
 ---@field title? string
 
----@param block string
-local function internal_tplb(block)
-    return "%<%!%-%-%[" .. block .. "%]%-%-%>"
-end
-
-local layout_file = io.open(path.resolve '/lib/htmx/layout.html', "r")
-if not layout_file then
-    error "Could not find layout.html"
-end
-local layout = {
-    blocks = {
-        title = internal_tplb "title",
-        content = internal_tplb "content"
-    },
-    file_content = html.minify(layout_file:read "*a")
-}
-layout_file:close()
-local templates_path = path.resolve '/server/templates'
+local DEFAULT_LAYOUT_ROOT_PATH <const> = path.resolve 'lib/htmx'
+local DEFAULT_TEMPLATES_ROOT <const> = 'server/templates'
 
 ---@class Htmx
+---@field templates_root string
+---@field layout_render fun(data: LayoutOptions): string
 local Htmx = {}
+
+---@param templates_root? string
+function Htmx:new(templates_root)
+    if not templates_root then
+        templates_root = DEFAULT_TEMPLATES_ROOT
+    end
+    templates_root = path.resolve(templates_root)
+    self.templates_root = templates_root
+    local layout_content = self:readLayoutTemplateFile()
+    if not layout_content then
+        local tmp = self.templates_root
+        self.templates_root = DEFAULT_LAYOUT_ROOT_PATH
+        layout_content = self:readLayoutTemplateFile()
+        self.templates_root = tmp
+    end
+    local compiled_layout = etlua.compile(layout_content)
+    if not compiled_layout then
+        error "Failed to compile layout template"
+    end
+    self.layout_render = compiled_layout
+    return self
+end
+
+function Htmx:readLayoutTemplateFile()
+    return self:readTemplateFile "layout.tpl"
+end
 
 ---@async
 ---@param template_path string
 ---@return string?, error?
-Htmx.readTemplateFile = function(template_path)
-    local file = io.open(templates_path .. '/' .. template_path, "r")
+function Htmx:readTemplateFile(template_path)
+    local file = io.open(self.templates_root .. '/' .. template_path, "r")
     if not file then
         return nil, "Template not found: " .. template_path
     end
@@ -48,7 +60,7 @@ end
 ---@param template string
 ---@param data? templatedata
 ---@return string?, error?
-Htmx.render = function(template, data)
+function Htmx:render(template, data)
     local render = etlua.compile(template)
     if not render then
         return nil, "Failed to compile template"
@@ -60,12 +72,12 @@ end
 ---@param template_path string
 ---@param data? table
 ---@return Response?, error?
-Htmx.renderFromFile = function(template_path, data)
-    local template = Htmx.readTemplateFile(template_path)
+function Htmx:renderFromFile(template_path, data)
+    local template = self:readTemplateFile(template_path)
     if not template then
         return { status = http.Status.NOT_FOUND }
     end
-    local body, render_err = Htmx.render(template, data)
+    local body, render_err = self:render(template, data)
     if not body then
         return nil, render_err
     end
@@ -80,20 +92,21 @@ end
 ---@param template_path string
 ---@param options? LayoutOptions
 ---@return Response, error?
-Htmx.layout = function(template_path, options)
+function Htmx:layout(template_path, options)
     if not options then
         options = {}
     end
-    local template, render_err = Htmx.renderFromFile(template_path, options.data)
+    local template, render_err = self:renderFromFile(template_path, options.data)
     if not template then
         print(render_err)
         return {
             status = http.Status.INTERNAL_SERVER_ERROR,
         }
     end
-    local body = layout.file_content
-        :gsub(layout.blocks.title, options.title or "Title")
-        :gsub(layout.blocks.content, template.body)
+    local body = self.layout_render {
+        title = options.title,
+        content = template.body
+    }
     return {
         headers = {
             ["Content-Type"] = http.MimeType.HTML
@@ -102,8 +115,8 @@ Htmx.layout = function(template_path, options)
     }
 end
 
-Htmx.render404 = function()
-    local four_oh_four, render_err = Htmx.renderFromFile "404.tpl"
+function Htmx:render404()
+    local four_oh_four, render_err = self:renderFromFile "404.tpl"
     if not four_oh_four then
         return http.response({
             status = http.Status.NOT_FOUND,

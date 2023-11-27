@@ -1,7 +1,7 @@
 local http = require "lib.http"
 local http_plugins = require "lib.http.plugins"
 local route_helper = require "lib.http.route-helper"
-local htmx = require "lib.htmx"
+local htmx = require "server.htmx"
 
 local DEFAULT_ROUTE <const> = "index"
 
@@ -54,7 +54,7 @@ function App:onRequest(req)
     local handlers = self.routers[method]
     local route = handlers[route_name]
     if not route then
-        return htmx.render404()
+        return htmx:render404()
     end
     local response = route(req)
     if not response then

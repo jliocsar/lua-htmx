@@ -5,10 +5,11 @@
     <link rel="stylesheet" href="/static/app.css" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!--[meta]-->
-    <title><!--[title]--></title>
+    <title>
+      <%= title or 'Default title' -%>
+    </title>
   </head>
   <body>
-    <!--[content]-->
+    <%- content -%>
   </body>
 </html>
