@@ -6,7 +6,6 @@ local start = true
 devtools:get("/devtools", function(req)
     ---@type Response
     local response = {}
-    print("devtools")
     if start then
         response.headers = {
             ["HX-Refresh"] = "true"
