@@ -26,8 +26,9 @@ end
 ---@param routers table<method, handler[]>
 ---@param router HttpRouter
 RouteHelper.merge = function(routers, router)
-    ---@diagnostic disable-next-line: invisible local
-    local routes = router.__routes
+    local router_meta = getmetatable(router)
+    ---@type httprrmeta
+    local routes = router_meta.__routes
     for method, handlers in pairs(routes) do
         for route, fn in pairs(handlers) do
             if not routers[method] then

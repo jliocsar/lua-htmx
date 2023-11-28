@@ -1,11 +1,11 @@
 ---@type method[]
 local supported_methods = { "get", "post", "put", "delete", "patch" }
 
----@alias httprmeta table<method, table<string, handler>>
+---@alias httprrmeta table<method, table<string, handler>>
 ---@alias httprh fun(self: HttpRouter, route_name: string, handler: handler)
 
 ---@class HttpRouter
----@field private __routes httprmeta
+---@field private __routes httprrmeta
 ---@field get httprh
 ---@field post httprh
 ---@field put httprh
@@ -19,10 +19,14 @@ local function createMethodHandler(method)
     ---@param route route
     ---@param handler handler
     return function(self, route, handler)
-        if self.__routes[method][route] then
+        local meta = getmetatable(self)
+        ---@type httprrmeta
+        local routes = meta.__routes
+        if routes[method][route] then
             error("Duplicate router key: " .. route)
         end
-        self.__routes[method][route] = handler
+        routes[method][route] = handler
+        setmetatable(self, meta)
     end
 end
 
@@ -34,17 +38,17 @@ end
 ---@return HttpRouter
 function HttpRouter:new()
     local router = {}
-    setmetatable(router, self)
+    setmetatable(router, {
+        __index = self,
+        __routes = {
+            get = {},
+            post = {},
+            put = {},
+            delete = {},
+            patch = {},
+        }
+    })
     self.__index = self
-    -- TODO: is there a better way to do this?
-    ---@type httprmeta
-    router.__routes = {
-        get = {},
-        post = {},
-        put = {},
-        delete = {},
-        patch = {},
-    }
     return router
 end
 
