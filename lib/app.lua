@@ -53,12 +53,6 @@ function App:onRequest(req)
         return htmx:render404()
     end
     local response = route(req)
-    if not response then
-        -- all gud just didnt feel like returning a body
-        response = {
-            status = http.Status.OK
-        }
-    end
     if self.afterRequest then
         local after_response = self:afterRequest(req, response)
         if after_response then

@@ -19,7 +19,7 @@ local tcp = require "lib.http.tcp"
 ---@class Router
 ---@field [route] handler
 
----@alias handler async fun(req: Request): Response?
+---@alias handler async fun(req: Request): Response
 
 local HTTP_REQUEST_HEAD_MATCH <const> = "([A-Z]+) ([^ ]+) HTTP/([0-9.]+)(.+)"
 local HTTP_HEADER_ENTRY_MATCH <const> = "([^:]+):%s([^\r\n]+)"

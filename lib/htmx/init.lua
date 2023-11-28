@@ -17,7 +17,7 @@ local DEFAULT_TEMPLATES_ROOT <const> = "server/templates"
 ---@field layout_render fun(data: LayoutOptions): string
 local Htmx = {}
 
----@param templates_root? string
+---@param templates_root? string defaults to `"server/templates"`
 function Htmx:new(templates_root)
     if not templates_root then
         templates_root = DEFAULT_TEMPLATES_ROOT
