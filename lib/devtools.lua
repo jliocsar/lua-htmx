@@ -6,10 +6,11 @@ local start = true
 devtools:get("/devtools", function(req)
     ---@type Response
     local response = {}
+    print("devtools")
     if start then
-        -- response.headers = {
-        --     ["HX-Redirect"] = "/"
-        -- }
+        response.headers = {
+            ["HX-Refresh"] = "true"
+        }
         start = false
     end
     return response

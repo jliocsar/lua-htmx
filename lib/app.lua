@@ -26,10 +26,8 @@ local App = {
 function App:new(options)
     self.routers = route_helper.findRouters(options.routers)
     if env.IS_DEV then
-        route_helper.mapPush(self.routers, devtools)
+        route_helper.merge(self.routers, devtools)
     end
-    print(self.routers.get["/"])
-    print(self.routers.get["/devtools"])
     self.server = http.createServer(options.host, options.port, function(req)
         return self:onRequest(req)
     end)

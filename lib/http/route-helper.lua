@@ -16,7 +16,7 @@ RouteHelper.findRouters = function(modname_prefix)
         local router_file_name = string.format("%s.%s", modname_prefix, router_name)
         ---@type HttpRouter
         local router = require(router_file_name)
-        RouteHelper.mapPush(routers, router)
+        RouteHelper.merge(routers, router)
     end
 
     find_routers:close()
@@ -25,16 +25,14 @@ end
 
 ---@param routers table<method, handler[]>
 ---@param router HttpRouter
-RouteHelper.mapPush = function(routers, router)
-    ---@type table<method, table<string, handler>>
-    local router_meta = getmetatable(router.routes)
-    for method, handlers in pairs(router_meta) do
-        print(router_meta, router, method)
-        if not routers[method] then
-            routers[method] = {}
-        end
+RouteHelper.merge = function(routers, router)
+    ---@diagnostic disable-next-line: invisible local
+    local routes = router.__routes
+    for method, handlers in pairs(routes) do
         for route, fn in pairs(handlers) do
-            print(route, method, fn)
+            if not routers[method] then
+                routers[method] = {}
+            end
             if routers[method][route] then
                 error("Duplicate router key: " .. route)
             end
