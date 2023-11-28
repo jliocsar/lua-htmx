@@ -9,9 +9,7 @@ local term = require "lib.utils.term"
 ---@field getsockname fun(self: Socket): unknown?
 ---@field close fun(self: Socket)
 
----@class Server
----@field socket Socket
----@field start fun()
+---@class Server: { socket: Socket, start: fun() }
 
 ---@class Client
 ---@field read_start fun(self: Client, callback: fun(err: string, data: string))

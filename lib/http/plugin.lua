@@ -1,5 +1,4 @@
----@class Plugin
----@field use? async fun(req: Request): Response?
+---@class Plugin: { use?: async fun(req: Request): Response? }
 local Plugin = {}
 
 function Plugin:new()

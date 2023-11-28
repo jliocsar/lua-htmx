@@ -1,13 +1,15 @@
 local http = require "lib.http"
 local http_plugins = require "lib.http.plugins"
 local route_helper = require "lib.http.route-helper"
+local env = require "lib.env"
+local devtools = require "lib.devtools"
+-- FIXME: Remove this
 local htmx = require "server.htmx"
 
 ---@class AppOptions
 ---@field host string
 ---@field port integer
----Path to get the routes from
----@field routers string
+---@field routers string - path to the routers directory
 
 ---@class App
 ---@field private server Server
@@ -23,6 +25,11 @@ local App = {
 ---@param options AppOptions
 function App:new(options)
     self.routers = route_helper.findRouters(options.routers)
+    if env.IS_DEV then
+        route_helper.mapPush(self.routers, devtools)
+    end
+    print(self.routers.get["/"])
+    print(self.routers.get["/devtools"])
     self.server = http.createServer(options.host, options.port, function(req)
         return self:onRequest(req)
     end)
@@ -50,6 +57,7 @@ function App:onRequest(req)
     local handlers = self.routers[method]
     local route = handlers[route_name]
     if not route then
+        -- TODO: 404 page
         return htmx:render404()
     end
     local response = route(req)

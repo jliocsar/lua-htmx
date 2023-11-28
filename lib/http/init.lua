@@ -66,7 +66,6 @@ Http.MimeType = {
     WEBP = "image/webp",
 }
 
--- TODO: How to lazily load this?
 ---@enum extension
 local ExtensionMimeTypeMap = {
     html = Http.MimeType.HTML,

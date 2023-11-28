@@ -1,5 +1,6 @@
 local etlua = require "etlua"
 local http = require "lib.http"
+local env = require "lib.env"
 local path = require "lib.utils.path"
 local html = require "lib.utils.html"
 local term = require "lib.utils.term"
@@ -102,9 +103,13 @@ function Htmx:layout(template_path, options)
             status = http.Status.INTERNAL_SERVER_ERROR,
         }
     end
+    local content = template.body
+    if env.IS_DEV then
+        content = self:injectDevTools(content)
+    end
     local body = self.layout_render {
         title = options.title,
-        content = template.body
+        content = content
     }
     return {
         headers = {
@@ -112,6 +117,18 @@ function Htmx:layout(template_path, options)
         },
         body = body
     }
+end
+
+---@private
+function Htmx:injectDevTools(content)
+    local dev_tools = [[
+        <div
+            id="devtools"
+            hx-get="/devtools"
+            hx-trigger="load, every 1s"
+        ></div>
+    ]]
+    return content .. "\r\n" .. dev_tools
 end
 
 function Htmx:render404()

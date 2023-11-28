@@ -3,8 +3,7 @@ local path = require "lib.utils.path"
 local env = require "lib.env"
 local compress = require "lib.http.plugins.compression"
 
----@class StaticOptions
----@field prefix? string
+---@class StaticOptions: { prefix?: string }
 
 ---@type table<string, Response>
 local cache = {}

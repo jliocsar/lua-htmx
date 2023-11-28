@@ -1,8 +1,18 @@
 ---@type method[]
 local supported_methods = { "get", "post", "put", "delete", "patch" }
 
-HttpRouter = {}
+---@alias httprh fun(self: HttpRouter, route_name: string, handler: handler)
 
+---@class HttpRouter
+---@field get httprh
+---@field post httprh
+---@field put httprh
+---@field delete httprh
+---@field patch httprh
+local HttpRouter = {}
+
+---@param self HttpRouter
+---@return HttpRouter
 function HttpRouter:new()
     ---@type table<method, table<string, handler>>
     local initial_metatable = {
