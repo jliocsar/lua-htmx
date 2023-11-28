@@ -1,6 +1,29 @@
-require "lib.http.types"
 local tcp = require "lib.http.tcp"
 local env = require "lib.env"
+
+---@alias method "get" | "post" | "put" | "delete" | "head" | "options" | "patch" | "trace" | "connect"
+---@alias handler async fun(req: Request): Response
+---@alias error string
+---@alias route string
+---@alias httprrmeta table<method, table<string, handler>>
+---@alias httprh fun(self: HttpRouter, route_name: string, handler: handler)
+
+---@class Response
+---@field status? status
+---@field body? string
+---@field headers? table<string, string>
+---@field cookies? table<string, string>
+
+---@class Request
+---@field method string
+---@field path string
+---@field version string
+---@field query table<string, string>
+---@field headers table<string, string>
+---@field body string
+
+---@class Router
+---@field [route] handler
 
 local HTTP_REQUEST_HEAD_MATCH <const> = "([A-Z]+) ([^ ]+) HTTP/([0-9.]+)(.+)"
 local HTTP_HEADER_ENTRY_MATCH <const> = "([^:]+):%s([^\r\n]+)"
@@ -131,13 +154,26 @@ Http.stringifyHeaders = function(headers)
     return str_headers
 end
 
+-- TODO: Support secure/http only
+Http.stringifyCookies = function(cookies)
+    if not cookies then
+        return ""
+    end
+    local str_cookies = ""
+    for key, value in pairs(cookies) do
+        str_cookies = string.format("Set-Cookie: %s=%s\r\n", key, tostring(value))
+    end
+    return str_cookies
+end
+
 ---Converts a `Response` to a string
 ---@param response Response
 ---@return string
 Http.response = function(response)
     local status = response.status or Http.Status.OK
     local body = response.body
-    local headers = Http.stringifyHeaders(response.headers)
+    local cookies = Http.stringifyCookies(response.cookies)
+    local headers = Http.stringifyHeaders(response.headers) .. cookies
     local status_name = Http.StatusName[status]
     if not status_name then
         status = Http.Status.INTERNAL_SERVER_ERROR
@@ -146,7 +182,7 @@ Http.response = function(response)
     local payload = string.format("HTTP/1.1 %d %s\r\n", status, status_name)
         .. headers
     if body then
-        if response.headers and not response.headers["Content-Type"] then
+        if not response.headers or not response.headers["Content-Type"] then
             payload = payload .. "Content-Type: text/plain\r\n"
         end
         payload = payload

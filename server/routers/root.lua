@@ -15,6 +15,9 @@ root_router:get("/", function()
             body = tostring(err)
         }
     end
+    response.cookies = {
+        Test = "Test cookies"
+    }
     return http.cached(response)
 end)
 
