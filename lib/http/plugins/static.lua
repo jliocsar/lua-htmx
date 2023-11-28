@@ -16,7 +16,7 @@ Static.use = function(options)
     local prefix = options and options.prefix or "static"
     return function(req)
         local req_path = req.path
-        local is_static = req_path:find("^/" .. prefix .. "/") ~= nil
+        local is_static = req_path:match("^/" .. prefix .. "/") ~= nil
         if not is_static then
             return nil
         end

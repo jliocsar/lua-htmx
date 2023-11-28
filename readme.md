@@ -55,4 +55,5 @@ This command will start the `tailwindcss` build in `--watch` mode; it'll also ru
 
 ## To do
 
+- [ ] Add websocket support
 - [ ] Would `sqlite` be better?

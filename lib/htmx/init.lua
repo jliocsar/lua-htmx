@@ -119,6 +119,7 @@ function Htmx:layout(template_path, options)
     }
 end
 
+-- TODO: Support websockets
 ---@private
 function Htmx:injectDevTools(content)
     local dev_tools = [[

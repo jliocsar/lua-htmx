@@ -7,12 +7,13 @@ local env = require "lib.env"
 ---@alias route string
 ---@alias httprrmeta table<method, table<string, handler>>
 ---@alias httprh fun(self: HttpRouter, route_name: string, handler: handler)
+---@alias rescookie { value: any, httponly: boolean, secure: boolean, expires: string }
 
 ---@class Response
 ---@field status? status
 ---@field body? string
 ---@field headers? table<string, string>
----@field cookies? table<string, string>
+---@field cookies? table<string, rescookie>
 
 ---@class Request
 ---@field method string
@@ -20,6 +21,7 @@ local env = require "lib.env"
 ---@field version string
 ---@field query table<string, string>
 ---@field headers table<string, string>
+---@field cookies table<string, string>
 ---@field body string
 
 ---@class Router
@@ -120,23 +122,40 @@ Http.qs = function(query_string)
     return qs
 end
 
+---@private
+---@param raw_headers_with_body string
+Http.parseHeadersWithCookies = function(raw_headers_with_body)
+    local headers_entries = raw_headers_with_body:gmatch(HTTP_HEADER_ENTRY_MATCH)
+    local headers = {}
+    local cookies = {}
+    for key, value in headers_entries do
+        local is_cookie = key:match("Cookie") ~= nil
+        if is_cookie then
+            for cookie_key, cookie_value in value:gmatch("([^=]+)=([^;]+)") do
+                cookies[cookie_key] = cookie_value
+            end
+        else
+            headers[key] = value
+        end
+    end
+    return headers, cookies
+end
+
 ---@param req string
 ---@return Request
 Http.parseRequest = function(req)
     local method, raw_route_path, version, raw_headers_with_body = req:match(HTTP_REQUEST_HEAD_MATCH)
-    local headers_entries = raw_headers_with_body:gmatch(HTTP_HEADER_ENTRY_MATCH)
     local body = raw_headers_with_body:match(HTTP_BODY_MATCH)
     local route_path, query_string = raw_route_path:match("([^?]+)%??(.*)")
-    local headers = {}
-    for key, value in headers_entries do
-        headers[key] = value
-    end
+    local headers, cookies = Http.parseHeadersWithCookies(raw_headers_with_body)
+    local query = Http.qs(query_string)
     return {
-        query = Http.qs(query_string),
+        query = query,
         method = method,
         path = route_path,
         version = version,
         headers = headers,
+        cookies = cookies,
         body = body
     }
 end
@@ -155,13 +174,25 @@ Http.stringifyHeaders = function(headers)
 end
 
 -- TODO: Support secure/http only
+---@param cookies table<string, rescookie>
 Http.stringifyCookies = function(cookies)
     if not cookies then
         return ""
     end
     local str_cookies = ""
     for key, value in pairs(cookies) do
-        str_cookies = string.format("Set-Cookie: %s=%s\r\n", key, tostring(value))
+        local cookie_value = value.value
+        str_cookies = string.format("Set-Cookie: %s=%s", key, tostring(cookie_value))
+        if value.httponly then
+            str_cookies = str_cookies .. "; HttpOnly"
+        end
+        if value.secure then
+            str_cookies = str_cookies .. "; Secure"
+        end
+        if value.expires then
+            str_cookies = str_cookies .. string.format("; Expires=%s", value.expires)
+        end
+        str_cookies = str_cookies .. "\r\n"
     end
     return str_cookies
 end

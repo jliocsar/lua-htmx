@@ -25,7 +25,7 @@ local function is_file(mode)
 end
 
 local function is_ignored(path)
-  return path == ".." or path == "." or ignored:find(path)
+  return path == ".." or path == "." or ignored:match(path) ~= nil
 end
 
 ---@type table<string, integer>

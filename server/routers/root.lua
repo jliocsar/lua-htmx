@@ -5,8 +5,8 @@ local htmx = require "server.htmx"
 
 local root_router = HttpRouter:new()
 
-root_router:get("/", function()
-    local response, err = htmx:layout("index.tpl", {
+root_router:get("/", function(req)
+    local res, err = htmx:layout("index.tpl", {
         title = "Lua HTMX Example"
     })
     if err then
@@ -15,10 +15,14 @@ root_router:get("/", function()
             body = tostring(err)
         }
     end
-    response.cookies = {
-        Test = "Test cookies"
+    res.cookies = {
+        test = {
+            value = "test",
+            httponly = true,
+            expires = "Wed, 21 Oct 2024 07:28:00 GMT"
+        }
     }
-    return http.cached(response)
+    return http.cached(res)
 end)
 
 return root_router
