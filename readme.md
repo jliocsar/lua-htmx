@@ -34,8 +34,6 @@ HTTP server built on top of [luv](https://github.com/luvit/luv) focused in high-
 
 ```sh
 ./install
-# or if you have all dependencies except the rocks
-luarocks make --local
 ```
 
 ### Starting the HTTP server
