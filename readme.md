@@ -1,5 +1,7 @@
 # lua-htmx
 
+Lua + MongoDB + HTMX + Tailwind
+
 HTTP server built on top of [luv](https://github.com/luvit/luv) focused in high-performance.
 
 - File-system routing for easy definition of new routes;
@@ -22,10 +24,9 @@ HTTP server built on top of [luv](https://github.com/luvit/luv) focused in high-
 
 ## Requirements
 
-- [`luarocks`](https://luarocks.org/#quick-start)
+- [`build-essential`](https://packages.debian.org/pt-br/sid/build-essential)
 - [`mongo-c-driver`](https://github.com/mongodb/mongo-c-driver)
 - [`mprocs`](https://github.com/pvolok/mprocs) _for dev_
-- [TailwindCSS](https://tailwindcss.com/docs/installation)
 
 ## Instructions
 
@@ -50,3 +51,7 @@ This command will start the `tailwindcss` build in `--watch` mode; it'll also ru
 ```sh
 ./dev [port]
 ```
+
+## To do
+
+- [ ] Would `sqlite` be better?

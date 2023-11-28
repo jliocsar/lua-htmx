@@ -9,19 +9,12 @@ DISTRO="linux-x64"
 # May need to change to your distro's package manager
 # sudo apt install -y libbson-dev libmongoc-dev
 
-# Uncomment this to install `inotify-tools`
-# May need to change to your distro's package manager
-# sudo apt install -y inotify-tools
-
 # If you need to install mprocs, you can use this
 # npm i -g mprocs
 
-if [ ! -d "./5.4" ]; then
+if [ ! -d "./.lua" ]; then
     echo "Installing localua"
-    curl https://loadk.com/localua.sh -o localua
-    chmod +x ./localua
-    ./localua 5.4
-    rm ./localua
+    curl https://loadk.com/localua.sh | bash -s .lua
 fi
 
 if [ ! -f "./tailwindcss" ]; then
@@ -32,4 +25,4 @@ if [ ! -f "./tailwindcss" ]; then
 fi
 
 echo "Installing rocks from rockspec"
-./5.4/bin/luarocks install --deps-only --local ./lua-htmx-dev-1.rockspec
+.lua/bin/luarocks install --only-deps --tree=.lua --local ./lua-htmx-dev-1.rockspec
