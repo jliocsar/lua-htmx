@@ -17,6 +17,7 @@ local htmx = require "server.htmx"
 ---@field private routers table<method, handler[]>
 ---@field onRequest async fun(self: App, req: Request): string
 ---@field afterRequest async fun(self: App, req?: Request, res?: Response): Response
+---@field render404? fun(self: App): Response
 local App = {
     plugins = {},
     routers = {}
@@ -55,8 +56,13 @@ function App:onRequest(req)
     local handlers = self.routers[method]
     local route = handlers[route_name]
     if not route then
-        -- TODO: 404 page
-        return htmx:render404()
+        if (self.render404) then
+            return http.response(self:render404())
+        end
+        return http.response {
+            status = http.Status.NOT_FOUND,
+            body = "Not found"
+        }
     end
     local response = route(req)
     if self.afterRequest then

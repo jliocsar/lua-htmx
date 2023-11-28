@@ -134,14 +134,14 @@ end
 function Htmx:render404()
     local four_oh_four, render_err = self:renderFromFile "404.tpl"
     if not four_oh_four then
-        return http.response({
+        return {
             status = http.Status.NOT_FOUND,
             body = tostring(render_err)
-        })
+        }
     end
     local response = http.cached(four_oh_four)
     response.status = http.Status.NOT_FOUND
-    return http.response(response)
+    return response
 end
 
 return Htmx

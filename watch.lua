@@ -82,7 +82,7 @@ end
 
 function Dev:restart()
   self:stop()
-  return self:run()
+  self:run()
 end
 
 local dev = Dev:new()
