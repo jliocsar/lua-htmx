@@ -1,3 +1,17 @@
+---@class Socket
+---@field bind fun(self: Socket, host: string, port: integer)
+---@field listen fun(self: Socket, backlog: integer, callback: fun(err: string))
+---@field accept fun(self: Socket, client: Client)
+---@field getsockname fun(self: Socket): unknown?
+---@field close fun(self: Socket)
+
+---@class Server: { socket: Socket, start: fun() }
+
+---@class Client
+---@field read_start fun(self: Client, callback: fun(err: string, data: string))
+---@field write fun(self: Client, data: string, callback: fun(err: string))
+---@field close fun(self: Client)
+
 ---@class Response
 ---@field status? status
 ---@field body? string
