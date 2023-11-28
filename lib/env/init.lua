@@ -2,7 +2,10 @@
 local Env = {}
 
 local function readEnvFile()
-    local file = assert(io.open(".env", "r"), "No .env file found")
+    local file = io.open(".env", "r")
+    if not file then
+        return ""
+    end
     local env = file:read "a"
     file:close()
     return env

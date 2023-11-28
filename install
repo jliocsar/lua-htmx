@@ -1,10 +1,9 @@
 #!/bin/sh
-version="linux-x64"
+DISTRO="linux-x64"
 
-# Uncomment this if you face the `"missing lua.h"` error
+# Uncomment this to install necessary C libraries
 # May need to change to your distro's package manager
-# echo "Installing apt deps"
-# sudo apt install -y liblua5.4-dev
+# sudo apt install -y build-essential
 
 # Uncomment this if you face any BSON/MongoDB related errors
 # May need to change to your distro's package manager
@@ -17,26 +16,20 @@ version="linux-x64"
 # If you need to install mprocs, you can use this
 # npm i -g mprocs
 
-# Install luarocks globally
-# if ! command -v -- "luarocks" > /dev/null 2>&1; then
-#   cwd=$(pwd)
-#   echo "Installing luarocks"
-#   cd /tmp
-#   wget https://luarocks.org/releases/luarocks-3.9.2.tar.gz
-#   tar zxpf luarocks-3.9.2.tar.gz
-#   cd luarocks-3.9.2
-#   ./configure && make && sudo make install
-#   cd ..
-#   rm -rf luarocks-3.9.2.tar.gz luarocks-3.9.2
-#   cd $cwd
-# fi
+if [ ! -d "./5.4" ]; then
+    echo "Installing localua"
+    curl https://loadk.com/localua.sh -o localua
+    chmod +x ./localua
+    ./localua 5.4
+    rm ./localua
+fi
 
 if [ ! -f "./tailwindcss" ]; then
-  echo "Installing tailwindcss cli"
-  curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-$version
-  chmod +x tailwindcss-$version
-  mv tailwindcss-$version tailwindcss
+    echo "Installing tailwindcss cli"
+    curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-$version
+    chmod +x tailwindcss-$version
+    mv tailwindcss-$version tailwindcss
 fi
 
 echo "Installing rocks from rockspec"
-./luarocks install --only-deps ./lua-htmx-dev-1.rockspec
+./5.4/bin/luarocks install --deps-only --local ./lua-htmx-dev-1.rockspec

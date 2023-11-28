@@ -34,7 +34,7 @@ HTTP server built on top of [luv](https://github.com/luvit/luv) focused in high-
 ```sh
 ./install
 # or if you have all dependencies except the rocks
-luarocks install --only-deps ./lua-htmx-dev-1.rockspec
+luarocks make --local
 ```
 
 ### Starting the HTTP server

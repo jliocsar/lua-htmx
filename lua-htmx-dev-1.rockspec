@@ -9,7 +9,6 @@ description = {
    license = "*** please specify a license ***"
 }
 dependencies = {
-   "emitter >= 0.0.3",
    "etlua >= 1.3",
    "lua >= 5.4",
    "luafilesystem >= 1.8",

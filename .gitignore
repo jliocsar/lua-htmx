@@ -1,7 +1,5 @@
-/luarocks
-/lua
-/lua_modules
-/.luarocks
+/5.4
+/localua
 /tailwindcss
 /public/*.css
 /.env
