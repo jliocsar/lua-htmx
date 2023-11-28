@@ -31,19 +31,23 @@ end
 ---@type table<string, integer>
 local last_modified_cached = {}
 
+local lfsattr = lfs.attributes
+local lfsdir = lfs.dir
+
 ---@param where string
 ---@param callback fun(last_modified: integer)
 local function notify_on_change(where, callback)
-  local iter, dir = lfs.dir(where)
+  local iter, dir = lfsdir(where)
   for target in iter, dir do
     if not is_ignored(target) then
       local target_path = where .. "/" .. target
-      local target_attr = lfs.attributes(target_path)
+      local target_attr = lfsattr(target_path)
       if target_attr == nil then
         print(term.colors.red_bright("Failed to get attributes for " .. target))
         os.exit(1)
       end
-      if is_file(target_attr.mode) then
+      local mode = target_attr.mode
+      if is_file(mode) then
         local last_modified = target_attr.modification
         local cached = last_modified_cached[target_path]
         if cached and cached < last_modified then
@@ -51,7 +55,7 @@ local function notify_on_change(where, callback)
         end
         last_modified_cached[target_path] = last_modified
       end
-      if is_dir(target_attr.mode) then
+      if is_dir(mode) then
         notify_on_change(target_path, callback)
       end
     end
@@ -61,8 +65,9 @@ end
 ---@param where string
 ---@param callback fun(last_modified: integer)
 local function watch(where, callback)
-  notify_on_change(where, callback)
-  return watch(where, callback)
+  while true do
+    notify_on_change(where, callback)
+  end
 end
 
 ---@class Dev
