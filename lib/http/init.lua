@@ -1,4 +1,5 @@
 local tcp = require "lib.http.tcp"
+local env = require "lib.env"
 
 ---@class Response
 ---@field status? status
@@ -86,8 +87,11 @@ local ExtensionMimeTypeMap = {
 ---@param res Response
 ---@param max_age? integer
 Http.cached = function(res, max_age)
+    if env.IS_DEV then
+        return res
+    end
     res.headers = res.headers or {}
-    res.headers["Cache-Control"] = ("max-age=%d"):format(max_age or 3600)
+    res.headers["Cache-Control"] = string.format("max-age=%d", max_age or 3600)
     return res
 end
 
@@ -160,14 +164,14 @@ Http.response = function(response)
         status = Http.Status.INTERNAL_SERVER_ERROR
         status_name = Http.StatusName[status]
     end
-    local payload = ("HTTP/1.1 %d %s\r\n"):format(status, status_name)
+    local payload = string.format("HTTP/1.1 %d %s\r\n", status, status_name)
         .. headers
     if body then
         if response.headers and not response.headers["Content-Type"] then
             payload = payload .. "Content-Type: text/plain\r\n"
         end
         payload = payload
-            .. ("Content-Length: %d"):format(#body)
+            .. string.format("Content-Length: %d", #body)
             .. "\r\n\r\n"
             .. body
     else

@@ -1,5 +1,6 @@
 local http = require "lib.http"
 local path = require "lib.utils.path"
+local env = require "lib.env"
 local compress = require "lib.http.plugins.compression"
 
 ---@class StaticOptions
@@ -39,12 +40,16 @@ Static.use = function(options)
         end
         local body = file:read("*a")
         file:close()
+        local headers = {
+            ["Content-Type"] = mime_type
+        }
+        -- cache static files only if not in development
+        if not env.IS_DEV then
+            headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        end
         ---@type Response
         local response = compress {
-            headers = {
-                ["Cache-Control"] = "max-age=31536000, immutable",
-                ["Content-Type"] = mime_type
-            },
+            headers = headers,
             body = body
         }
         cache[req_path] = response

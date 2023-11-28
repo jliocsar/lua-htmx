@@ -59,11 +59,11 @@ Tcp.createServer = function(host, port, on_request)
   local function start()
     local current = socket:getsockname()
     if not current then
-      print(term.colors.red_bright("Could not start server, is the port %d available?\n"):format(port))
+      print(term.colors.red_bright(string.format("Could not start server, is the port %d available?\n", port)))
       os.exit(98)
     end
     term.resetTerm()
-    print(term.colors.bold(term.colors.cyan_bright("Server listening on %s:%d")):format(host, port))
+    print(term.colors.bold(term.colors.cyan_bright(string.format("Server listening on %s:%d", host, port))))
     uv.run()
   end
 

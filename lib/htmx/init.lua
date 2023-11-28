@@ -2,6 +2,7 @@ local etlua = require "etlua"
 local http = require "lib.http"
 local path = require "lib.utils.path"
 local html = require "lib.utils.html"
+local term = require "lib.utils.term"
 
 ---@alias templatedata table<string, unknown>
 
@@ -73,7 +74,7 @@ end
 function Htmx:renderFromFile(template_path, data)
     local template = self:readTemplateFile(template_path)
     if not template then
-        return { status = http.Status.NOT_FOUND }
+        return nil, string.format("Failed to read template file \"%s\"", template_path)
     end
     local body, render_err = self:render(template, data)
     if not body then
@@ -96,7 +97,7 @@ function Htmx:layout(template_path, options)
     end
     local template, render_err = self:renderFromFile(template_path, options.data)
     if not template then
-        print(render_err)
+        print(term.colors.red_bright(render_err))
         return {
             status = http.Status.INTERNAL_SERVER_ERROR,
         }

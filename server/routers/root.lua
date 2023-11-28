@@ -2,19 +2,12 @@ local http = require "lib.http"
 local HttpRouter = require "lib.http.router"
 
 local htmx = require "server.htmx"
-local ThingService = require "server.services.thing-service"
 
-local thing_service = ThingService:new()
 local root_router = HttpRouter:new()
 
-root_router:get("/", function(req)
-    local things = thing_service:list({ foo = req.query.foo })
-    local response, err = htmx:layout("test.tpl", {
-        title = "Index",
-        data = {
-            name = "mentals",
-            items = things
-        }
+root_router:get("/", function()
+    local response, err = htmx:layout("index.tpl", {
+        title = "Lua HTMX Example"
     })
     if err then
         return {

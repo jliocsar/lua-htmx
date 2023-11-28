@@ -1,5 +1,5 @@
----@class Env
-local Env = {}
+---@class Dotenv
+local Dotenv = {}
 
 local function readEnvFile()
     local file = io.open(".env", "r")
@@ -12,7 +12,7 @@ local function readEnvFile()
 end
 
 ---@param env string
-Env.parse = function(env)
+Dotenv.parse = function(env)
     local lines = env:gmatch "[^\r\n]+"
     local parsed = {}
     for line in lines do
@@ -27,21 +27,21 @@ Env.parse = function(env)
     return parsed
 end
 
-local env = Env.parse(readEnvFile())
+local env = Dotenv.parse(readEnvFile())
 
 ---@param key string
-Env.get = function(key)
+Dotenv.get = function(key)
     return env[key]
 end
 
 ---@param key string
-Env.set = function(key, value)
+Dotenv.set = function(key, value)
     env[key] = value
 end
 
 ---@param key string
-Env.delete = function(key)
+Dotenv.delete = function(key)
     env[key] = nil
 end
 
-return Env
+return Dotenv

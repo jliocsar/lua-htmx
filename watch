@@ -1,3 +1,3 @@
 #!/bin/sh
 eval $(./.lua/bin/luarocks path)
-./.lua/bin/lua ./watch.lua $@
+DEV=1 ./.lua/bin/lua ./watch.lua $@

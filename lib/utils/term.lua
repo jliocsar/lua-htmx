@@ -6,8 +6,8 @@ local _reset = "\x1b[0m"
 ---@param close integer
 ---@param close_suffix? string
 local function color(open, close, close_suffix)
-    local start = ("\x1b[%dm"):format(open)
-    local finish = ("\x1b[%dm"):format(close)
+    local start = string.format("\x1b[%dm", open)
+    local finish = string.format("\x1b[%dm", close)
     if close_suffix then
         finish = finish .. close_suffix
     end
