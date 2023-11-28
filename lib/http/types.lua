@@ -12,6 +12,13 @@
 ---@field write fun(self: Client, data: string, callback: fun(err: string))
 ---@field close fun(self: Client)
 
+---@alias method "get" | "post" | "put" | "delete" | "head" | "options" | "patch" | "trace" | "connect"
+---@alias handler async fun(req: Request): Response
+---@alias error string
+---@alias route string
+---@alias httprrmeta table<method, table<string, handler>>
+---@alias httprh fun(self: HttpRouter, route_name: string, handler: handler)
+
 ---@class Response
 ---@field status? status
 ---@field body? string
@@ -26,10 +33,5 @@
 ---@field headers table<string, string>
 ---@field body string
 
----@alias error string
----@alias route string
----@alias method "get" | "post" | "put" | "delete" | "head" | "options" | "patch" | "trace" | "connect"
 ---@class Router
 ---@field [route] handler
-
----@alias handler async fun(req: Request): Response

@@ -1,9 +1,6 @@
 ---@type method[]
 local supported_methods = { "get", "post", "put", "delete", "patch" }
 
----@alias httprrmeta table<method, table<string, handler>>
----@alias httprh fun(self: HttpRouter, route_name: string, handler: handler)
-
 ---@class HttpRouter
 ---@field private __routes httprrmeta
 ---@field get httprh
