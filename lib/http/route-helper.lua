@@ -27,13 +27,14 @@ end
 ---@param router HttpRouter
 RouteHelper.mapPush = function(routers, router)
     ---@type table<method, table<string, handler>>
-    local router_meta = getmetatable(router)
+    local router_meta = getmetatable(router.routes)
     for method, handlers in pairs(router_meta) do
         print(router_meta, router, method)
         if not routers[method] then
             routers[method] = {}
         end
         for route, fn in pairs(handlers) do
+            print(route, method, fn)
             if routers[method][route] then
                 error("Duplicate router key: " .. route)
             end
