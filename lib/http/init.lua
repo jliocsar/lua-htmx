@@ -1,26 +1,6 @@
+require "lib.http.types"
 local tcp = require "lib.http.tcp"
 local env = require "lib.env"
-
----@class Response
----@field status? status
----@field body? string
----@field headers? table<string, string>
-
----@class Request
----@field method string
----@field path string
----@field version string
----@field query table<string, string>
----@field headers table<string, string>
----@field body string
-
----@alias error string
----@alias route string
----@alias method "get" | "post" | "put" | "delete" | "head" | "options" | "patch" | "trace" | "connect"
----@class Router
----@field [route] handler
-
----@alias handler async fun(req: Request): Response
 
 local HTTP_REQUEST_HEAD_MATCH <const> = "([A-Z]+) ([^ ]+) HTTP/([0-9.]+)(.+)"
 local HTTP_HEADER_ENTRY_MATCH <const> = "([^:]+):%s([^\r\n]+)"

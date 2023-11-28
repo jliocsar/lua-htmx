@@ -2,7 +2,10 @@
 
 Lua + MongoDB + HTMX + Tailwind
 
-HTTP server built on top of [luv](https://github.com/luvit/luv) focused in high-performance.
+HTTP server built on top of [luv](https://github.com/luvit/luv).
+
+This repository is above all a Lua learning exercise.
+** Do not use this in production by any means**.
 
 - File-system routing for easy definition of new routes;
 - Responses compressed with [zlib](https://www.zlib.net/);
