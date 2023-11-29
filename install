@@ -1,9 +1,9 @@
 #!/bin/sh
 DISTRO="linux-x64"
 
-# Uncomment this to install necessary C libraries
+# Uncomment this to install necessary C/dev libraries
 # May need to change to your distro's package manager
-# sudo apt install -y build-essential
+# sudo apt install -y build-essential inotify-tools
 
 # Uncomment this if you face any BSON/MongoDB related errors
 # May need to change to your distro's package manager
@@ -24,5 +24,8 @@ if [ ! -f "./tailwindcss" ]; then
     mv tailwindcss-$version tailwindcss
 fi
 
+echo "Installing inotify rock"
+.lua/bin/luarocks install --tree=.lua --local inotify INOTIFY_INCDIR=/usr/include/x86_64-linux-gnu
+
 echo "Installing rocks from rockspec"
-.lua/bin/luarocks install --only-deps --tree=.lua --local ./lua-htmx-dev-1.rockspec
+.lua/bin/luarocks install --only-deps --tree=.lua --local  ./lua-htmx-dev-1.rockspec

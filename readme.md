@@ -29,6 +29,7 @@ This repository is above all a Lua learning exercise.
 
 - [`build-essential`](https://packages.debian.org/pt-br/sid/build-essential)
 - [`mongo-c-driver`](https://github.com/mongodb/mongo-c-driver)
+- [`inotify-tools`](https://packages.debian.org/pt-br/sid/inotify-tools) _for dev_
 - [`mprocs`](https://github.com/pvolok/mprocs) _for dev_
 
 ## Instructions

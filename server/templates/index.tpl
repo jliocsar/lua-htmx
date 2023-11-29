@@ -1,3 +1,3 @@
-<div class="bg-blue-200">
+<div class="bg-red-200">
   Testing some layouts
 </div>
