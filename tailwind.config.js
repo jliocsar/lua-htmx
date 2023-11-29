@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './lib/**/*.html',
@@ -9,6 +8,9 @@ module.exports = {
     './server/**/*.tpl',
   ],
   theme: {
+    fontFamily: {
+      sans: ['Sofia Sans Semi Condensed', 'sans-serif'],
+    },
     extend: {},
   },
   plugins: [],

@@ -11,52 +11,93 @@ local term = require "lib.utils.term"
 ---@field data? templatedata
 ---@field title? string
 
+---@class HtmxOptions
+---@field pages_root? string -- defaults to `"server/pages"`
+---@field components_root? string -- defaults to `"server/components"`
+
 local DEFAULT_LAYOUT_ROOT_PATH <const> = path.resolve "lib/htmx"
-local DEFAULT_TEMPLATES_ROOT <const> = "server/templates"
+local DEFAULT_PAGES_ROOT <const> = "server/pages"
+local DEFAULT_COMPONENTS_ROOT <const> = "server/components"
 
 ---@class Htmx
----@field templates_root string
+---@field pages_root string
+---@field components_root string
 ---@field layout_render fun(data: LayoutOptions): string
 local Htmx = {}
 
----@param templates_root? string defaults to `"server/templates"`
-function Htmx:new(templates_root)
-    if not templates_root then
-        templates_root = DEFAULT_TEMPLATES_ROOT
+---@param file_path string
+local function readFileContent(file_path)
+    local file = io.open(file_path, "r")
+    if not file then
+        return nil, "Page not found: " .. file_path
     end
-    templates_root = path.resolveFromRoot(templates_root)
-    self.templates_root = templates_root
+    local content = file:read "*a"
+    file:close()
+    return content
+end
+
+---Creates a new Htmx instance
+---@param options? HtmxOptions
+function Htmx:new(options)
+    if not options then
+        options = {}
+    end
+    if not options.pages_root then
+        options.pages_root = DEFAULT_PAGES_ROOT
+    end
+    if not options.components_root then
+        options.components_root = DEFAULT_COMPONENTS_ROOT
+    end
+    options.pages_root = path.resolveFromRoot(options.pages_root)
+    options.components_root = path.resolveFromRoot(options.components_root)
+    self.pages_root = options.pages_root
+    print(self.pages_root)
+    self.components_root = options.components_root
     local layout_content = self:readLayoutTemplateFile()
     if not layout_content then
-        local tmp = self.templates_root
-        self.templates_root = DEFAULT_LAYOUT_ROOT_PATH
+        local tmp = self.pages_root
+        self.pages_root = DEFAULT_LAYOUT_ROOT_PATH
         layout_content = self:readLayoutTemplateFile()
-        self.templates_root = tmp
+        self.pages_root = tmp
     end
     local compiled_layout = assert(etlua.compile(layout_content), "Failed to compile layout template")
     self.layout_render = compiled_layout
     return self
 end
 
+---Reads the default layout template content and returns it
 ---@private
 function Htmx:readLayoutTemplateFile()
-    return self:readTemplateFile "layout.tpl"
+    return self:readPageFile "layout.tpl"
 end
 
----@async
+---Reads a page template content and returns it
 ---@private
----@param template_path string
+---@param page_path string
 ---@return string?, error?
-function Htmx:readTemplateFile(template_path)
-    local file = io.open(self.templates_root .. "/" .. template_path, "r")
-    if not file then
-        return nil, "Template not found: " .. template_path
-    end
-    local template = file:read "*a"
-    file:close()
-    return template
+function Htmx:readPageFile(page_path)
+    local resolved_page_path = self.pages_root .. "/" .. page_path
+    return readFileContent(resolved_page_path)
 end
 
+---Reads a component template content and returns it
+---@private
+---@param component_path string
+---@return string?, error?
+function Htmx:readComponentFile(component_path)
+    local resolved_component_path = self.components_root .. "/" .. component_path
+    return readFileContent(resolved_component_path)
+end
+
+---Alias to `Htmx:readComponentFile`
+---@private
+---@param component_path string
+---@return string?, error?
+local function include(component_path)
+    return Htmx:readComponentFile(component_path)
+end
+
+---Renders a template string with the given data
 ---@param template string
 ---@param data? templatedata
 ---@return string?, error?
@@ -65,17 +106,22 @@ function Htmx:render(template, data)
     if not render then
         return nil, "Failed to compile template"
     end
+    data = data or {}
+    data.include = include
     local rendered = render(data)
-    return html.minify(rendered)
+    return rendered
 end
 
----@param template_path string
+---Renders a page template and returns the response
+---Keep in mind this won't add the layout to the page, meaning you'll have to
+---do that yourself (e.g. create your own layout by hand or just use the page content rendered)
+---@param page_path string
 ---@param data? table
 ---@return Response?, error?
-function Htmx:renderFromFile(template_path, data)
-    local template = self:readTemplateFile(template_path)
+function Htmx:renderPage(page_path, data)
+    local template, read_err = self:readPageFile(page_path)
     if not template then
-        return nil, string.format("Failed to read template file \"%s\"", template_path)
+        return nil, string.format("Failed to read template file\n%s", read_err)
     end
     local body, render_err = self:render(template, data)
     if not body then
@@ -89,14 +135,15 @@ function Htmx:renderFromFile(template_path, data)
     }
 end
 
----@param template_path string
+---Adds the layout to a page template and returns the response
+---@param page_path string
 ---@param options? LayoutOptions
 ---@return Response, error?
-function Htmx:layout(template_path, options)
+function Htmx:layout(page_path, options)
     if not options then
         options = {}
     end
-    local template, render_err = self:renderFromFile(template_path, options.data)
+    local template, render_err = self:renderPage(page_path, options.data)
     if not template then
         print(term.colors.red_bright(render_err))
         return {
@@ -133,7 +180,7 @@ function Htmx:injectDevTools(content)
 end
 
 function Htmx:render404()
-    local four_oh_four, render_err = self:renderFromFile "404.tpl"
+    local four_oh_four, render_err = self:renderPage "404.tpl"
     if not four_oh_four then
         return {
             status = http.Status.NOT_FOUND,
