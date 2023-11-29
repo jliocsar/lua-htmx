@@ -3,8 +3,6 @@ local http_plugins = require "lib.http.plugins"
 local route_helper = require "lib.http.route-helper"
 local env = require "lib.env"
 local devtools = require "lib.devtools"
--- FIXME: Remove this
-local htmx = require "server.htmx"
 
 ---@class AppOptions
 ---@field host string

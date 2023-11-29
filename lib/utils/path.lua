@@ -6,8 +6,12 @@ local proc = assert(io.popen("pwd"), "Could not get current working directory")
 Path.root = proc:read("*a"):gsub("\n", "")
 proc:close()
 
-Path.resolve = function(path)
-    return Path.root .. "/" .. path
+Path.resolve = function(...)
+    return table.concat({ ... }, "/")
+end
+
+Path.resolveFromRoot = function(...)
+    return Path.resolve(Path.root, ...)
 end
 
 return Path

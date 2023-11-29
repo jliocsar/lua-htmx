@@ -24,7 +24,7 @@ function Htmx:new(templates_root)
     if not templates_root then
         templates_root = DEFAULT_TEMPLATES_ROOT
     end
-    templates_root = path.resolve(templates_root)
+    templates_root = path.resolveFromRoot(templates_root)
     self.templates_root = templates_root
     local layout_content = self:readLayoutTemplateFile()
     if not layout_content then
