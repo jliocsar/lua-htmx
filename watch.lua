@@ -88,18 +88,22 @@ function Dev:restart()
   self:run()
 end
 
-local dev = Dev:new()
+local function watch()
+  local dev = Dev:new()
 
-signal.signal(signal.SIGINT, function(signum)
-  print(term.colors.yellow_bright("Stopping server"))
-  dev:stop()
-  handle:close()
-  os.exit(128 + signum)
-end)
+  signal.signal(signal.SIGINT, function(signum)
+    print(term.colors.yellow_bright("Stopping server"))
+    dev:stop()
+    handle:close()
+    os.exit(128 + signum)
+  end)
 
-dev:run()
+  dev:run()
 
-watch_where(where, function()
-  print(term.colors.blue_bright("File changed, restarting server"))
-  dev:restart()
-end)
+  watch_where(where, function()
+    print(term.colors.blue_bright("File changed, restarting server"))
+    dev:restart()
+  end)
+end
+
+watch()
