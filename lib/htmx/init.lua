@@ -180,7 +180,9 @@ function Htmx:injectDevTools(content)
 end
 
 function Htmx:render404()
-    local four_oh_four, render_err = self:renderPage "404.tpl"
+    local four_oh_four, render_err = self:layout("404.tpl", {
+        title = "404",
+    })
     if not four_oh_four then
         return {
             status = http.Status.NOT_FOUND,
