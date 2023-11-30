@@ -1,11 +1,9 @@
 module.exports = {
   content: [
-    './lib/**/*.html',
+    './lib/**/*.etlua',
     './lib/**/*.lua',
-    './lib/**/*.tpl',
-    './server/**/*.html',
+    './server/**/*.etlua',
     './server/**/*.lua',
-    './server/**/*.tpl',
   ],
   theme: {
     fontFamily: {

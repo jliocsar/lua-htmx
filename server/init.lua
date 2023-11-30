@@ -14,7 +14,7 @@ local app = App:new({
 App:use(static.use())
 
 function App:render404()
-    -- uses the default htmx helper to render `server/pages/404.tpl`
+    -- uses the default htmx helper to render `server/pages/404.etlua`
     return htmx:render404()
 end
 

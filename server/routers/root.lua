@@ -6,7 +6,7 @@ local htmx = require "server.htmx"
 local root_router = HttpRouter:new()
 
 root_router:get("/", function(req)
-    local res, err = htmx:layout("index.tpl", {
+    local res, err = htmx:layout("index.etlua", {
         title = "Lua HTMX Example"
     })
     if err then

@@ -2,7 +2,6 @@ local etlua = require "etlua"
 local http = require "lib.http"
 local env = require "lib.env"
 local path = require "lib.utils.path"
-local html = require "lib.utils.html"
 local term = require "lib.utils.term"
 
 ---@alias templatedata table<string, unknown>
@@ -68,7 +67,7 @@ end
 ---Reads the default layout template content and returns it
 ---@private
 function Htmx:readLayoutTemplateFile()
-    return self:readPageFile "layout.tpl"
+    return self:readPageFile "layout.etlua"
 end
 
 ---Reads a page template content and returns it
@@ -180,7 +179,7 @@ function Htmx:injectDevTools(content)
 end
 
 function Htmx:render404()
-    local four_oh_four, render_err = self:layout("404.tpl", {
+    local four_oh_four, render_err = self:layout("404.etlua", {
         title = "404",
     })
     if not four_oh_four then
