@@ -61,7 +61,10 @@ Tcp.createServer = function(host, port, on_request)
       os.exit(98)
     end
     term.resetTerm()
-    print(term.colors.bold(term.colors.cyan_bright(string.format("Server listening on %s:%d", host, port))))
+    local now = term.colors.blue_bright(os.date("%c"))
+    local address = term.colors.underline(string.format("http://%s:%d", host, port))
+    local listening = term.colors.cyan_bright("Server listening on " .. address)
+    print(term.colors.bold((string.format("[%s] %s", now, listening))))
     uv.run()
   end
 

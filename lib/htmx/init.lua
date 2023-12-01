@@ -1,6 +1,7 @@
 local etlua = require "etlua"
 local http = require "lib.http"
 local env = require "lib.env"
+local html = require "lib.utils.html"
 local path = require "lib.utils.path"
 local term = require "lib.utils.term"
 
@@ -9,6 +10,9 @@ local term = require "lib.utils.term"
 ---@class LayoutOptions
 ---@field data? templatedata
 ---@field title? string
+-- TODO: support <link /> and <script src>
+---@field style? string -- inlined css
+---@field script? string -- inlined JS
 
 ---@class HtmxOptions
 ---@field pages_root? string -- defaults to `"server/pages"`
@@ -153,10 +157,10 @@ function Htmx:layout(page_path, options)
     if env.IS_DEV then
         content = self:injectDevTools(content)
     end
-    local body = self.layout_render {
+    local body = html.minify(self.layout_render {
         title = options.title,
         content = content
-    }
+    })
     return {
         headers = {
             ["Content-Type"] = http.MimeType.HTML

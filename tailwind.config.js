@@ -9,7 +9,6 @@ module.exports = {
     fontFamily: {
       sans: ['Sofia Sans Semi Condensed', 'sans-serif'],
     },
-    extend: {},
   },
   plugins: [],
 }

@@ -43,7 +43,9 @@ Static.use = function(options)
             ["Content-Type"] = mime_type
         }
         -- cache static files only if not in development
-        if not env.IS_DEV then
+        if env.IS_DEV then
+            headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        else
             headers["Cache-Control"] = "public, max-age=31536000, immutable"
         end
         ---@type Response

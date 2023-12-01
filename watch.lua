@@ -19,8 +19,8 @@ local where = arg[1] or "."
 local handle = inotify.init()
 local watchers = {}
 
-local function is_ignored(path)
-  return path == ".." or path == "." or ignored:match(path) ~= nil
+local function is_ignored(target)
+  return target == ".." or target == "." or ignored:match(target) ~= nil
 end
 
 local function create_dir_watch(dir_path)
