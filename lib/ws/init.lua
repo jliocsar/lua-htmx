@@ -1,20 +1,20 @@
 local base64 = require "base64"
+local sha1 = require "external.sha1"
 local http = require "lib.http"
-local sha1 = require "lib.sha1"
 local tcp = require "lib.http.tcp"
 local term = require "lib.utils.term"
 
 -- Currently implements version 13 of the WebSocket protocol.
 -- No support for `subprotocols` and `extensions` yet.
--- TODO: Supqyport `permessage-deflate` and `client_max_window_bits` extensions.
+-- TODO: Support `permessage-deflate` and `client_max_window_bits` extensions.
 local WS = {}
 
 WS.MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
--- WS.hashKey = function(key)
---     local hash = sha1(key .. WS.MAGIC)
---     return base64.encode(hash)
--- end
+WS.hashKey = function(key)
+    local hash = sha1.bin(key .. WS.MAGIC)
+    return base64.encode(hash)
+end
 
 ---@private
 ---@param req string
@@ -40,14 +40,15 @@ WS.onRequest = function(req, client)
         })
     end
     local key, version = WS.getWebSocketHeaders(headers)
-    print(key, version)
-    local hashed_key = key
+    -- print(key, version)
+    local hashed_key = WS.hashKey(key)
+    print(hashed_key)
     return http.response({
         status = http.Status.SWITCHING_PROTOCOLS,
         headers = {
             ['Upgrade'] = 'websocket',
             ['Connection'] = 'Upgrade',
-            ['Sec-WebSocket-Accept'] = 'TODO',
+            ['Sec-WebSocket-Accept'] = hashed_key,
         }
     })
 end
