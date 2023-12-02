@@ -54,7 +54,6 @@ function Htmx:new(options)
     options.pages_root = path.resolveFromRoot(options.pages_root)
     options.components_root = path.resolveFromRoot(options.components_root)
     self.pages_root = options.pages_root
-    print(self.pages_root)
     self.components_root = options.components_root
     local layout_content = self:readLayoutTemplateFile()
     if not layout_content then

@@ -36,6 +36,7 @@ local Http = {}
 
 ---@enum status
 Http.Status = {
+    SWITCHING_PROTOCOLS = 101,
     OK = 200,
     NOT_MODIFIED = 304,
     BAD_REQUEST = 400,
@@ -47,6 +48,7 @@ Http.Status = {
 
 ---@enum statusname
 Http.StatusName = {
+    [Http.Status.SWITCHING_PROTOCOLS] = "Switching Protocols",
     [Http.Status.OK] = "OK",
     [Http.Status.NOT_MODIFIED] = "Not Modified",
     [Http.Status.BAD_REQUEST] = "Bad Request",
@@ -129,6 +131,8 @@ Http.parseHeadersWithCookies = function(raw_headers_with_body)
     local headers = {}
     local cookies = {}
     for key, value in headers_entries do
+        -- TODO: understand why
+        key = key:gsub("\r\n", "")
         local is_cookie = key:match("Cookie") ~= nil
         if is_cookie then
             for cookie_key, cookie_value in value:gmatch("([^=]+)=([^;]+)") do

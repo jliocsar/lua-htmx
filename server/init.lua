@@ -1,4 +1,5 @@
 local App = require "lib.app"
+local WebSocket = require "lib.ws"
 local static = require "lib.http.plugins.static"
 local compression = require "lib.http.plugins.compression"
 local htmx = require "server.htmx"
@@ -10,6 +11,7 @@ local app = App:new({
     port = config.PORT,
     routers = "server.routers"
 })
+local ws = WebSocket.server
 
 App:use(static.use())
 
@@ -23,4 +25,5 @@ function App:afterRequest(_, res)
     return compressed
 end
 
+ws.start()
 app:start()

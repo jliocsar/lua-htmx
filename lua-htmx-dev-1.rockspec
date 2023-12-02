@@ -9,6 +9,7 @@ description = {
    license = "*** please specify a license ***"
 }
 dependencies = {
+   "base64 >= 1.5",
    "etlua >= 1.3",
    "inotify >= 0.5",
    "lua >= 5.4",
