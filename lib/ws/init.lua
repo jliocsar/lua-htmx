@@ -1,8 +1,18 @@
 local base64 = require "base64"
+local bit = require "external.bit"
 local sha1 = require "external.sha1"
 local http = require "lib.http"
 local tcp = require "lib.http.tcp"
 local term = require "lib.utils.term"
+
+---@class WebSocketFrame
+---@field fin boolean
+---@field opcode wsopcode
+---@field mask boolean
+---@field payload_len integer
+---@field mask_key integer[]
+---@field payload integer[]
+---@field payload_str string
 
 -- Currently implements version 13 of the WebSocket protocol.
 -- No support for `subprotocols` and `extensions` yet.
@@ -12,6 +22,16 @@ local WS = {}
 WS.MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 -- 16 bytes base64 encoded
 WS.EXPECTED_KEY_LENGTH = 0x18
+
+---@enum wsopcode
+WS.Opcode = {
+    CONTINUATION = 0x0,
+    TEXT = 0x1,
+    BINARY = 0x2,
+    CLOSE = 0x8,
+    PING = 0x9,
+    PONG = 0xA,
+}
 
 ---@private
 ---@param key string
@@ -64,11 +84,41 @@ WS.handshake = function(req, client)
 end
 
 ---@private
+---@return WebSocketFrame
+WS.decodeFrame = function(req)
+    local decoded = {}
+    local bytes = { string.byte(req, 1, #req) }
+    local first_byte = bytes[1]
+    local fin, rsv1, rsv2, rsv3, op1, op2, op3, op4 = bit.byte_to_bits(first_byte)
+    decoded.fin = fin
+    decoded.opcode = bit.bits_to_byte(op1, op2, op3, op4)
+    local mask, len1, len2, len3, len4 = bit.byte_to_bits(bytes[2])
+    decoded.mask = mask
+    decoded.payload_len = bit.bits_to_byte(len1, len2, len3, len4)
+    local mask_key = { table.unpack(bytes, 3, 6) }
+    decoded.mask_key = mask_key
+    local payload = { table.unpack(bytes, 15, #bytes) }
+    decoded.payload = payload
+    decoded.payload_str = string.char(table.unpack(payload))
+    return decoded
+end
+
+---@private
+---@param frame WebSocketFrame
+WS.encodeFrame = function(frame)
+
+end
+
+---@private
 ---@param req string
 WS.handleWebSocketRequest = function(req)
-    local random_websocket_response_in_bytes = string.char(0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51,
-        0x58)
-    return random_websocket_response_in_bytes
+    local decoded_frame = WS.decodeFrame(req)
+    print(decoded_frame.opcode)
+    if decoded_frame.opcode == WS.Opcode.CLOSE then
+        return nil
+    end
+    print(decoded_frame.payload_str)
+    return req
 end
 
 ---@private
@@ -77,6 +127,10 @@ end
 WS.handleWebSocketResponse = function(res, client)
     -- local random_websocket_response_in_bytes = string.char(0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51,
     --     0x58)
+    if not res then
+        client:close()
+        return
+    end
     client:write(res, function(write_err)
         assert(not write_err, write_err)
         -- client:close()
@@ -112,7 +166,7 @@ WS.createServer = function(host, port)
         end,
         ---@param res unknown
         on_response = function(res, client)
-            if res.status then
+            if res and res.status then
                 local should_close = res.status ~= http.Status.SWITCHING_PROTOCOLS
                 local response = http.response(res)
                 client:write(response, function(write_err)
