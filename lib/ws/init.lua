@@ -10,9 +10,11 @@ local term = require "lib.utils.term"
 local WS = {}
 
 WS.MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
--- 16 bytes base64 encoded (binary)
+-- 16 bytes base64 encoded
 WS.EXPECTED_KEY_LENGTH = 0x18
 
+---@private
+---@param key string
 WS.hashKey = function(key)
     local hash = sha1.bin(key .. WS.MAGIC)
     return base64.encode(hash)
@@ -21,7 +23,7 @@ end
 ---@private
 ---@param req Request
 ---@param client Socket
-WS.handleHttpRequest = function(req, client)
+WS.handshake = function(req, client)
     local headers = req.headers
     local is_websocket_connection = headers.Connection == 'Upgrade' and headers.Upgrade == 'websocket'
     local is_get_request = req.method == 'GET'
@@ -40,6 +42,7 @@ WS.handleHttpRequest = function(req, client)
         }
     end
     local key, version = WS.getWebSocketHeaders(headers)
+    -- TODO: Do a proper check to see if the string is base64 encoded
     local is_valid_key = key and #key == WS.EXPECTED_KEY_LENGTH
     if not is_valid_key or not version then
         return {
@@ -63,18 +66,21 @@ end
 ---@private
 ---@param req string
 WS.handleWebSocketRequest = function(req)
-    return {
-        status = http.Status.INTERNAL_SERVER_ERROR,
-    }
+    local random_websocket_response_in_bytes = string.char(0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51,
+        0x58)
+    return random_websocket_response_in_bytes
 end
 
 ---@private
 ---@param res unknown
 ---@param client Socket
 WS.handleWebSocketResponse = function(res, client)
-    return {
-        status = http.Status.INTERNAL_SERVER_ERROR,
-    }
+    -- local random_websocket_response_in_bytes = string.char(0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51,
+    --     0x58)
+    client:write(res, function(write_err)
+        assert(not write_err, write_err)
+        -- client:close()
+    end)
 end
 
 ---@private
@@ -130,7 +136,7 @@ WS.createServer = function(host, port)
             if not parsed_req then
                 return WS.handleWebSocketRequest(req)
             end
-            return WS.handleHttpRequest(parsed_req, client)
+            return WS.handshake(parsed_req, client)
         end
     })
     return server

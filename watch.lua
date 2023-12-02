@@ -85,6 +85,7 @@ end
 
 function Dev:restart()
   self:stop()
+  term.resetTerm()
   self:run()
 end
 

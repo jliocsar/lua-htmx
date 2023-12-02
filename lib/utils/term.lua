@@ -63,7 +63,7 @@ colors.bg_white_bright = color(107, 49)
 Term.colors = colors
 
 Term.resetTerm = function()
-    -- os.execute("tput reset")
+    os.execute("tput reset")
 end
 
 return Term

@@ -32,7 +32,6 @@ local Tcp = {}
 ---@param on_response? fun(res: unknown, client: Socket)
 Tcp.handleConnection = function(client, on_request, on_response)
   client:read_start(function(read_err, req)
-    print("REQ", req)
     assert(not read_err, read_err)
     if on_request then
       local response = on_request(req, client)
@@ -84,7 +83,6 @@ Tcp.createServer = function(options)
       print(term.colors.red_bright(string.format("Could not start server, is the port %d available?\n", port)))
       os.exit(98)
     end
-    term.resetTerm()
     local now = term.colors.blue_bright(os.date "%c")
     local address = term.colors.underline(string.format("http://%s:%d", host, port))
     local listening = term.colors.cyan_bright("Server listening on " .. address)
