@@ -14,6 +14,13 @@ local term = require "lib.utils.term"
 
 ---@class Server: { socket: Socket, start: fun() }
 
+---@class CreateServerOptions
+---@field host string
+---@field port integer
+---@field on_request? fun(req: string, client: Socket): unknown
+---@field on_response? fun(res: unknown, client: Socket)
+---@field on_socket? fun(socket: Socket)
+
 local BACKLOG <const> = 128
 
 ---@class Tcp
@@ -21,33 +28,42 @@ local Tcp = {}
 
 ---@private
 ---@param client Socket
----@param on_request fun(req: string, client: Socket): string
-Tcp.handleConnection = function(client, on_request)
+---@param on_request? fun(req: string, client: Socket): unknown
+---@param on_response? fun(res: unknown, client: Socket)
+Tcp.handleConnection = function(client, on_request, on_response)
   client:read_start(function(read_err, req)
+    print("REQ", req)
     assert(not read_err, read_err)
-    local response = on_request(req, client)
-    if response then
-      client:write(response, function(write_err)
-        assert(not write_err, write_err)
-        client:close()
-      end)
+    if on_request then
+      local response = on_request(req, client)
+      if on_response then
+        on_response(response, client)
+      else
+        client:write(response, function(write_err)
+          assert(not write_err, write_err)
+          client:close()
+        end)
+      end
     else
       client:close()
     end
   end)
 end
 
----@param host string
----@param port integer
----@param on_request fun(req: string, client: Socket): string
----@param on_socket? fun(socket: Socket)
+Tcp.run = function()
+  uv.run()
+end
+
+---@param options CreateServerOptions
 ---@return Server
-Tcp.createServer = function(host, port, on_request, on_socket)
+Tcp.createServer = function(options)
   ---@type Socket
   local socket = uv.new_tcp()
+  local host = options.host
+  local port = options.port
 
-  if on_socket then
-    on_socket(socket)
+  if options.on_socket then
+    options.on_socket(socket)
   end
 
   socket:bind(host, port)
@@ -55,27 +71,27 @@ Tcp.createServer = function(host, port, on_request, on_socket)
     assert(not err, err)
     local client = uv.new_tcp()
     socket:accept(client)
-    Tcp.handleConnection(client, on_request)
+    Tcp.handleConnection(client, options.on_request, options.on_response)
   end)
 
-  local function start()
+  local server = {
+    socket = socket
+  }
+
+  function server:start()
     local current = socket:getsockname()
     if not current then
       print(term.colors.red_bright(string.format("Could not start server, is the port %d available?\n", port)))
       os.exit(98)
     end
     term.resetTerm()
-    local now = term.colors.blue_bright(os.date("%c"))
+    local now = term.colors.blue_bright(os.date "%c")
     local address = term.colors.underline(string.format("http://%s:%d", host, port))
     local listening = term.colors.cyan_bright("Server listening on " .. address)
     print(term.colors.bold((string.format("[%s] %s", now, listening))))
-    uv.run()
   end
 
-  return {
-    socket = socket,
-    start = start
-  }
+  return server
 end
 
 return Tcp

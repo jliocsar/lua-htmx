@@ -1,5 +1,5 @@
 local App = require "lib.app"
-local WebSocket = require "lib.ws"
+local ws = require "lib.ws"
 local static = require "lib.http.plugins.static"
 local compression = require "lib.http.plugins.compression"
 local htmx = require "server.htmx"
@@ -9,11 +9,12 @@ local config = require "config.const"
 local app = App:new({
     host = config.HOST,
     port = config.PORT,
-    routers = "server.routers"
+    routers = [[server.routers]]
 })
-local ws = WebSocket.server
+local ws_server = ws.createServer(config.HOST, config.PORT + 1)
 
 App:use(static.use())
+App:withWebSocket(ws_server)
 
 function App:render404()
     -- uses the default htmx helper to render `server/pages/404.etlua`
@@ -25,5 +26,4 @@ function App:afterRequest(_, res)
     return compressed
 end
 
-ws.start()
 app:start()

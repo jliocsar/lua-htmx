@@ -10,7 +10,9 @@ local devtools = require "lib.devtools"
 ---@field routers string - path to the routers directory
 
 ---@class App
+---@field private options AppOptions
 ---@field private server Server
+---@field private ws_server Server
 ---@field private plugins handler[]
 ---@field private routers table<method, handler[]>
 ---@field onRequest async fun(self: App, req: Request): string
@@ -23,6 +25,7 @@ local App = {
 
 ---@param options AppOptions
 function App:new(options)
+    self.options = options
     self.routers = route_helper.findRouters(options.routers)
     if env.IS_DEV then
         route_helper.merge(self.routers, devtools)
@@ -33,8 +36,25 @@ function App:new(options)
     return self
 end
 
+---@param ws_server Server
+function App:withWebSocket(ws_server)
+    self.ws_server = ws_server
+end
+
 function App:start()
+    if self.ws_server then
+        self.ws_server:start()
+    end
     self.server:start()
+    -- blocks the thread until the server is closed
+    http.run()
+end
+
+function App:close()
+    self.server.socket:close()
+    if self.ws_server then
+        self.ws_server.socket:close()
+    end
 end
 
 ---@param plugin handler

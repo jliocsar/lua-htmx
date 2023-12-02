@@ -146,9 +146,12 @@ Http.parseHeadersWithCookies = function(raw_headers_with_body)
 end
 
 ---@param req string
----@return Request
+---@return Request?, error?
 Http.parseRequest = function(req)
     local method, raw_route_path, version, raw_headers_with_body = req:match(HTTP_REQUEST_HEAD_MATCH)
+    if not raw_headers_with_body then
+        return nil, "Found no headers in this request"
+    end
     local body = raw_headers_with_body:match(HTTP_BODY_MATCH)
     local route_path, query_string = raw_route_path:match("([^?]+)%??(.*)")
     local headers, cookies = Http.parseHeadersWithCookies(raw_headers_with_body)
@@ -230,15 +233,34 @@ Http.response = function(response)
     return payload
 end
 
+Http.run = function()
+    return tcp.run()
+end
+
 ---@param host string
 ---@param port integer
 ---@param on_request fun(req: Request): string
 ---@return Server
 Http.createServer = function(host, port, on_request)
-    local server = tcp.createServer(host, port, function(req)
-        local parsed_req = Http.parseRequest(req)
-        return on_request(parsed_req)
-    end)
+    local server = tcp.createServer({
+        host = host,
+        port = port,
+        on_request = function(req)
+            if not req then
+                return Http.response({
+                    status = Http.Status.INTERNAL_SERVER_ERROR,
+                })
+            end
+            local parsed_req, parse_err = Http.parseRequest(req)
+            if not parsed_req then
+                return Http.response({
+                    status = Http.Status.BAD_REQUEST,
+                    body = parse_err
+                })
+            end
+            return on_request(parsed_req)
+        end
+    })
     return server
 end
 

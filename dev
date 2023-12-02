@@ -1,2 +1,2 @@
 #!/bin/sh
-mprocs "./build --watch" "./watch"
+mprocs "./watch" "./build --watch"
