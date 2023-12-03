@@ -14,6 +14,14 @@ local term = require "lib.utils.term"
 ---@field payload_len? integer
 ---@field payload_str? string
 
+---@class ClientWebSocketFrame: WebSocketFrame
+---@field payload integer[]
+---@field payload_len integer
+---@field payload_str string
+
+---@class ServerWebSocketFrame: WebSocketFrame
+---@field payload string
+
 -- Currently implements version 13 of the WebSocket protocol.
 -- No support for `subprotocols` and `extensions` yet.
 -- TODO: Support `permessage-deflate` and `client_max_window_bits` extensions.
@@ -84,14 +92,14 @@ WS.handshake = function(req, client)
 end
 
 ---@private
----@return WebSocketFrame
+---@return ClientWebSocketFrame
 WS.decodeFrame = function(req)
     local decoded = {}
     local bytes = { string.byte(req, 1, #req) }
     local head = bytes[1]
     local fin, rsv1, rsv2, rsv3, op1, op2, op3, op4 = bit.byte_to_bits(head)
     decoded.fin = fin
-    decoded.opcode = bit.bits_to_byte(op1, op2, op3, op4)
+    decoded.opcode = bit.bits_to_byte(false, false, false, false, op1, op2, op3, op4)
     local mask, len1, len2, len3, len4 = bit.byte_to_bits(bytes[2])
     decoded.mask = mask
     decoded.payload_len = bit.bits_to_byte(len1, len2, len3, len4)
@@ -104,7 +112,22 @@ WS.decodeFrame = function(req)
 end
 
 ---@private
----@param frame WebSocketFrame
+---@param payload string
+---@param mask_key integer[]
+WS.maskPayload = function(payload, mask_key)
+    local payload_bytes = { string.byte(payload, 1, #payload) }
+    local masked = {}
+    for pos = 1, #payload_bytes do
+        local byte = payload_bytes[pos]
+        local masked_byte = bit.bxor(byte, mask_key[(pos - 1) % 4 + 1])
+        table.insert(masked, masked_byte)
+    end
+    return string.char(table.unpack(masked))
+end
+
+---@private
+---@param frame ServerWebSocketFrame
+---@return string
 WS.encodeFrame = function(frame)
     local encoded = {}
     local fin = frame.fin and 1 or 0
@@ -115,7 +138,7 @@ WS.encodeFrame = function(frame)
     local mask = frame.mask
     local len1, len2, len3, len4 = bit.byte_to_bits(frame.payload_len)
     local mask_key = frame.mask_key
-    local payload = frame.payload
+    local payload = WS.maskPayload(frame.payload, mask_key)
     local head = bit.bits_to_byte(fin, rsv1, rsv2, rsv3, op1, op2, op3, op4)
     table.insert(encoded, head)
     local mask_and_len = bit.bits_to_byte(mask, len1, len2, len3, len4)
@@ -138,7 +161,7 @@ WS.close = function(client)
         mask = false,
         payload_len = 0,
         mask_key = {},
-        payload = {},
+        payload = "",
     }
     -- TODO: This is a hack to avoid returning a response here
     -- then close the connection inside `WS.handleWebSocketResponse`
@@ -154,9 +177,11 @@ end
 ---@return string | nil
 WS.handleWebSocketRequest = function(req, client)
     local decoded_frame = WS.decodeFrame(req)
+    print(decoded_frame.opcode)
     if decoded_frame.opcode == WS.Opcode.CLOSE then
         return WS.close(client)
     end
+    print(decoded_frame.payload_str)
     return req
 end
 
@@ -165,8 +190,7 @@ end
 ---@param client Socket
 WS.handleWebSocketResponse = function(res, client)
     if not res then
-        client:close()
-        return
+        return client:close()
     end
     client:write(res, function(write_err)
         assert(not write_err, write_err)
@@ -183,7 +207,7 @@ WS.handleHttpResponse = function(res, client)
     client:write(response, function(write_err)
         assert(not write_err, write_err)
         if should_close then
-            client:close()
+            return client:close()
         end
     end)
 end
