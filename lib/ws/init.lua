@@ -9,10 +9,10 @@ local term = require "lib.utils.term"
 ---@field fin boolean
 ---@field opcode wsopcode
 ---@field mask boolean
----@field payload_len integer
 ---@field mask_key integer[]
 ---@field payload integer[]
----@field payload_str string
+---@field payload_len? integer
+---@field payload_str? string
 
 -- Currently implements version 13 of the WebSocket protocol.
 -- No support for `subprotocols` and `extensions` yet.
@@ -88,8 +88,8 @@ end
 WS.decodeFrame = function(req)
     local decoded = {}
     local bytes = { string.byte(req, 1, #req) }
-    local first_byte = bytes[1]
-    local fin, rsv1, rsv2, rsv3, op1, op2, op3, op4 = bit.byte_to_bits(first_byte)
+    local head = bytes[1]
+    local fin, rsv1, rsv2, rsv3, op1, op2, op3, op4 = bit.byte_to_bits(head)
     decoded.fin = fin
     decoded.opcode = bit.bits_to_byte(op1, op2, op3, op4)
     local mask, len1, len2, len3, len4 = bit.byte_to_bits(bytes[2])
@@ -106,18 +106,57 @@ end
 ---@private
 ---@param frame WebSocketFrame
 WS.encodeFrame = function(frame)
+    local encoded = {}
+    local fin = frame.fin and 1 or 0
+    local rsv1 = false
+    local rsv2 = false
+    local rsv3 = false
+    local op1, op2, op3, op4 = bit.byte_to_bits(frame.opcode)
+    local mask = frame.mask
+    local len1, len2, len3, len4 = bit.byte_to_bits(frame.payload_len)
+    local mask_key = frame.mask_key
+    local payload = frame.payload
+    local head = bit.bits_to_byte(fin, rsv1, rsv2, rsv3, op1, op2, op3, op4)
+    table.insert(encoded, head)
+    local mask_and_len = bit.bits_to_byte(mask, len1, len2, len3, len4)
+    table.insert(encoded, mask_and_len)
+    for pos = 1, #mask_key do
+        table.insert(encoded, mask_key[pos])
+    end
+    for pos = 1, #payload do
+        table.insert(encoded, payload[pos])
+    end
+    return string.char(table.unpack(encoded))
+end
 
+---@private
+---@param client Socket
+WS.close = function(client)
+    local frame = WS.encodeFrame {
+        fin = true,
+        opcode = WS.Opcode.CLOSE,
+        mask = false,
+        payload_len = 0,
+        mask_key = {},
+        payload = {},
+    }
+    -- TODO: This is a hack to avoid returning a response here
+    -- then close the connection inside `WS.handleWebSocketResponse`
+    -- This whole logic should be reworked and cleaner
+    client:write(frame, function(write_err)
+        assert(not write_err, write_err)
+    end)
 end
 
 ---@private
 ---@param req string
-WS.handleWebSocketRequest = function(req)
+---@param client Socket
+---@return string | nil
+WS.handleWebSocketRequest = function(req, client)
     local decoded_frame = WS.decodeFrame(req)
-    print(decoded_frame.opcode)
     if decoded_frame.opcode == WS.Opcode.CLOSE then
-        return nil
+        return WS.close(client)
     end
-    print(decoded_frame.payload_str)
     return req
 end
 
@@ -125,8 +164,6 @@ end
 ---@param res unknown
 ---@param client Socket
 WS.handleWebSocketResponse = function(res, client)
-    -- local random_websocket_response_in_bytes = string.char(0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51,
-    --     0x58)
     if not res then
         client:close()
         return
@@ -134,6 +171,20 @@ WS.handleWebSocketResponse = function(res, client)
     client:write(res, function(write_err)
         assert(not write_err, write_err)
         -- client:close()
+    end)
+end
+
+---@private
+---@param res Response
+---@param client Socket
+WS.handleHttpResponse = function(res, client)
+    local should_close = res.status ~= http.Status.SWITCHING_PROTOCOLS
+    local response = http.response(res)
+    client:write(response, function(write_err)
+        assert(not write_err, write_err)
+        if should_close then
+            client:close()
+        end
     end)
 end
 
@@ -166,15 +217,9 @@ WS.createServer = function(host, port)
         end,
         ---@param res unknown
         on_response = function(res, client)
-            if res and res.status then
-                local should_close = res.status ~= http.Status.SWITCHING_PROTOCOLS
-                local response = http.response(res)
-                client:write(response, function(write_err)
-                    assert(not write_err, write_err)
-                    if should_close then
-                        client:close()
-                    end
-                end)
+            local is_http_request = res and res.status
+            if is_http_request then
+                WS.handleHttpResponse(res, client)
                 return
             end
             WS.handleWebSocketResponse(res, client)
@@ -188,7 +233,7 @@ WS.createServer = function(host, port)
             local parsed_req = http.parseRequest(req)
             -- isn't a handshake
             if not parsed_req then
-                return WS.handleWebSocketRequest(req)
+                return WS.handleWebSocketRequest(req, client)
             end
             return WS.handshake(parsed_req, client)
         end
