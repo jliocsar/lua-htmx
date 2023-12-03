@@ -1,6 +1,6 @@
 local inotify = require 'inotify'
 local signal = require "posix.signal"
-local lfs = require "lfs"
+local luv = require "luv"
 
 local config = require "config.const"
 local term = require "lib.utils.term"
@@ -33,21 +33,12 @@ local function create_dir_watch(dir_path)
 end
 
 local function create_watchers(from)
-  local itr, dir = lfs.dir(from)
+  local dir = assert(luv.fs_scandir(from))
   create_dir_watch(from)
-  for target in itr, dir do
-    local is_watchable = target ~= "." and target ~= ".." and not is_ignored(target)
-    if is_watchable then
-      local resolved_target_path = target
-      if from ~= "." then
-        resolved_target_path = path.resolve(from, target)
-      end
-      local attr = lfs.attributes(resolved_target_path)
-      if attr then
-        if attr.mode == "directory" then
-          create_watchers(resolved_target_path)
-        end
-      end
+  for name, type in luv.fs_scandir_next, dir do
+    local target = path.resolve(from, name)
+    if type == "directory" and not is_ignored(name) then
+      create_watchers(target)
     end
   end
 end
