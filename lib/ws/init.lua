@@ -27,7 +27,6 @@ local json = require "external.json"
 local WS = {}
 
 WS.MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
--- 16 bytes base64 encoded
 WS.EXPECTED_KEY_LENGTH = 0x18
 
 ---@enum wsopcode
@@ -39,8 +38,6 @@ WS.Opcode = {
     PING = 0x9,
     PONG = 0xA,
 }
-
--- print(WS.Opcode.BINARY)
 
 ---@private
 ---@param key string
@@ -136,8 +133,6 @@ WS.encodeFrame = function(frame)
     if mask then
         local masked_payload = WS.maskPayload(frame.payload, frame.mask_key)
         payload = masked_payload
-    else
-        payload = ""
     end
     local bytes = {}
     table.insert(bytes, bit.bits_to_byte(table.unpack(first_byte)))
