@@ -1,6 +1,6 @@
 local base64 = require "base64"
-local bit = require "external.bit"
 local sha1 = require "external.sha1"
+local bit = require "lib.utils.bit"
 local http = require "lib.http"
 local tcp = require "lib.http.tcp"
 local term = require "lib.utils.term"
@@ -12,8 +12,6 @@ local json = require "external.json"
 ---@field mask boolean
 ---@field mask_key integer[]
 ---@field payload integer[]
----@field payload_len? integer
----@field payload_str? string
 
 ---@class ClientWebSocketFrame: WebSocketFrame
 ---@field payload integer[]
@@ -99,14 +97,14 @@ end
 WS.decodeFrame = function(req)
     local decoded = {}
     local bytes = { string.byte(req, 1, -1) }
-    local op4, op3, op2, op1, rsv3, rsv2, rsv1, fin = bit.byte_to_bits(bytes[1])
-    local len7, len6, len5, len4, len3, len2, len1, mask = bit.byte_to_bits(bytes[2])
+    local fin, rsv1, rsv2, rsv3, op4, op3, op2, op1 = bit.byte_to_bits(bytes[1])
+    local mask, len1, len2, len3, len4, len5, len6, len7 = bit.byte_to_bits(bytes[2])
     local mask_key = { table.unpack(bytes, 3, 6) }
     local payload = { table.unpack(bytes, 7, -1) }
     decoded.fin = fin
-    decoded.opcode = bit.bits_to_byte(op4, op3, op2, op1)
+    decoded.opcode = bit.bits_to_byte(false, false, false, false, op4, op3, op2, op1)
     decoded.mask = mask
-    decoded.payload_len = bit.bits_to_byte(len7, len6, len5, len4, len3, len2, len1)
+    decoded.payload_len = bit.bits_to_byte(false, len7, len6, len5, len4, len3, len2, len1)
     decoded.mask_key = mask_key
     decoded.payload = payload
     decoded.payload_str = string.char(table.unpack(payload))
@@ -117,42 +115,58 @@ end
 ---@param frame ServerWebSocketFrame
 ---@return string
 WS.encodeFrame = function(frame)
-    local encoded = {}
     local fin = frame.fin
-    local rsv1 = false
-    local rsv2 = false
-    local rsv3 = false
-    local op4, op3, op2, op1 = bit.byte_to_bits(frame.opcode)
-    local len7, len6, len5, len4, len3, len2, len1 = bit.byte_to_bits(frame.payload_len)
     local mask = frame.mask
-    local mask_key = frame.mask_key
-    local payload = mask_key and WS.maskPayload(frame.payload, mask_key) or frame.payload
-    local head = bit.bits_to_byte(op4, op3, op2, op1, rsv3, rsv2, rsv1, fin)
-    table.insert(encoded, head)
-    local mask_and_len = bit.bits_to_byte(len7, len6, len5, len4, len3, len2, len1, mask)
-    table.insert(encoded, mask_and_len)
-    for pos = 1, #mask_key do
-        table.insert(encoded, mask_key[pos])
+    local first_byte = {
+        fin,
+        false, false, false,
+        bit.byte_to_four_bits(frame.opcode)
+    }
+    local len1, len2, len3, len4, len5, len6, len7 = bit.byte_to_bits(#frame.payload)
+    local second_byte = {
+        mask,
+        len1, len2, len3, len4, len5, len6, len7
+    }
+    local extended_payload_len = {}
+    if #frame.payload > 125 then
+        local extended_len = bit.four_bits_to_byte(len4, len3, len2, len1)
+        table.insert(extended_payload_len, extended_len)
     end
-    for pos = 1, #payload do
-        table.insert(encoded, payload[pos])
+    local payload = ""
+    if mask then
+        local masked_payload = WS.maskPayload(frame.payload, frame.mask_key)
+        payload = masked_payload
+    else
+        payload = ""
     end
-    return string.char(table.unpack(encoded))
+    local bytes = {}
+    table.insert(bytes, bit.bits_to_byte(table.unpack(first_byte)))
+    table.insert(bytes, bit.bits_to_byte(table.unpack(second_byte)))
+    for _, byte in ipairs(extended_payload_len) do
+        table.insert(bytes, byte)
+    end
+    for _, byte in ipairs(frame.mask_key) do
+        table.insert(bytes, byte)
+    end
+    local payload_bytes = { string.byte(payload, 1, #payload) }
+    for _, byte in ipairs(payload_bytes) do
+        table.insert(bytes, byte)
+    end
+    return string.char(table.unpack(bytes))
 end
 
 ---@private
 ---@param payload string
 ---@param mask_key integer[]
 WS.maskPayload = function(payload, mask_key)
-    return payload
-    -- local payload_bytes = { string.byte(payload, 1, #payload) }
-    -- local masked = {}
-    -- for pos = 1, #payload_bytes do
-    --     local byte = payload_bytes[pos]
-    --     local masked_byte = bit.bxor(byte, mask_key[(pos - 1) % 4 + 1])
-    --     table.insert(masked, masked_byte)
-    -- end
-    -- return string.char(table.unpack(masked))
+    local payload_bytes = { string.byte(payload, 1, #payload) }
+    local masked = {}
+    for pos = 1, #payload_bytes do
+        local byte = payload_bytes[pos]
+        local masked_byte = bit.bxor(byte, mask_key[(pos - 1) % 4 + 1])
+        table.insert(masked, masked_byte)
+    end
+    return string.char(table.unpack(masked))
 end
 
 ---@private
@@ -162,7 +176,6 @@ WS.close = function(client)
         fin = true,
         opcode = WS.Opcode.CLOSE,
         mask = false,
-        payload_len = 0,
         payload = "",
         mask_key = {},
     }
@@ -184,14 +197,7 @@ WS.handleWebSocketRequest = function(req, client)
     if decoded_frame.opcode == WS.Opcode.CLOSE then
         return WS.close(client)
     end
-    return WS.encodeFrame {
-        fin = true,
-        opcode = WS.Opcode.TEXT,
-        mask = false,
-        payload_len = #"Hello!",
-        payload = "Hello!",
-        mask_key = {},
-    }
+    return req
 end
 
 ---@private
