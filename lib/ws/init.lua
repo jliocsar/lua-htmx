@@ -171,7 +171,7 @@ WS.encodeFrame = function(frame)
         op3,
         op4
     )
-    local payload_len = frame.payload and #frame.payload + 1 or 0
+    local payload_len = frame.payload and #frame.payload + 0x01 or 0
     local _, len1, len2, len3, len4, len5, len6, len7 = bit.byte_to_bits(payload_len)
     local second_byte = bit.bits_to_byte(
         has_mask,
@@ -193,8 +193,9 @@ WS.encodeFrame = function(frame)
         char(first_byte),
         char(second_byte),
     }
+    -- TODO: Support payload lengths
     if payload_len < 126 then
-        bytes[3] = char(payload_len + 1)
+        bytes[3] = char(payload_len + 0x01)
     end
     bytes[#bytes + 1] = payload
     return concat(bytes)
