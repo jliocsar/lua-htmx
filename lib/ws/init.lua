@@ -172,7 +172,8 @@ WS.encodeFrame = function(frame)
         op3,
         op4
     )
-    local len1, len2, len3, len4, len5, len6, len7 = bit.byte_to_bits(#frame.payload)
+    local payload_len = frame.payload and #frame.payload + 1 or 0
+    local _, len1, len2, len3, len4, len5, len6, len7 = bit.byte_to_bits(payload_len)
     local second_byte = bit.bits_to_byte(
         has_mask,
         len1,
@@ -183,10 +184,9 @@ WS.encodeFrame = function(frame)
         len6,
         len7
     )
-    local payload_len = #frame.payload
     local payload = frame.payload
-    local mask_key = WS.rand4()
     if has_mask then
+        local mask_key = WS.rand4()
         payload = WS.maskPayload(payload, mask_key)
         payload_len = #payload
     end
@@ -224,9 +224,6 @@ WS.close = function(client)
     local frame = WS.encodeFrame {
         fin = true,
         opcode = WS.Opcode.CLOSE,
-        mask = false,
-        payload = "",
-        mask_key = {},
     }
     -- TODO: This is a hack to avoid returning a response here
     -- then close the connection inside `WS.handleWebSocketResponse`
@@ -246,18 +243,16 @@ WS.handleWebSocketRequest = function(req, client)
     if not decoded_frame then
         return
     end
-    print("DECODED", json.encode(decoded_frame))
+    -- print("DECODED", json.encode(decoded_frame))
     if decoded_frame.opcode == WS.Opcode.CLOSE then
         return WS.close(client)
     end
-    print("PAYLOAD", decoded_frame.payload)
-    return WS.encodeFrame({
+    -- print("PAYLOAD", decoded_frame.payload)
+    local response = WS.encodeFrame {
         fin = true,
         payload = "Hello World!",
-        opcode = WS.Opcode.TEXT,
-        mask = false,
-        mask_key = {},
-    })
+    }
+    return response
 end
 
 ---@private
