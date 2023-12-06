@@ -194,7 +194,7 @@ WS.encodeFrame = function(frame)
         char(second_byte),
     }
     if payload_len < 126 then
-        bytes[3] = char(payload_len)
+        bytes[3] = char(payload_len + 1)
     end
     bytes[#bytes + 1] = payload
     return concat(bytes)
