@@ -26,7 +26,6 @@ local json = require "external.json"
 ---@field opcode? wsopcode
 
 local byte, char, sub = string.byte, string.char, string.sub
-local band, bor, bxor, rshift, lshift = bit.band, bit.bor, bit.bxor, bit.rshift, bit.lshift
 local floor, random = math.floor, math.random
 local concat = table.concat
 local colors = term.colors
@@ -99,27 +98,36 @@ WS.handshake = function(req, client)
     }
 end
 
+WS.rand4 = function()
+    -- Generate 32 bits of pseudo random data
+    local num = floor(random() * 0x100000000)
+    -- Return as a 4-byte string
+    return char(
+        num >> 24,
+        (num >> 16) & 0xff,
+        (num >> 8) & 0xff,
+        num & 0xff
+    )
+end
+
 ---@private
 ---@param chunk string
 ---@return ClientWebSocketFrame?
 WS.decodeFrame = function(chunk)
     local second_byte = byte(chunk, 2)
-    local payload_len = band(second_byte, 0x7F)
+    local payload_len = second_byte & 0x7F
     local offset = 2
     if payload_len == 126 then
-        payload_len = bor(
-            lshift(byte(chunk, 3), 8),
-            byte(chunk, 4)
-        )
+        payload_len = (byte(chunk, 3) << 8) | byte(chunk, 4)
         offset = 4
     elseif payload_len == 127 then
-        payload_len = lshift(byte(chunk, 3), 24) | lshift(byte(chunk, 4), 16) | lshift(byte(chunk, 5), 8) |
-            byte(chunk, 6) * 0x100000000 + lshift(byte(chunk, 7), 24) + lshift(byte(chunk, 8), 16) +
-            lshift(byte(chunk, 9), 8) + byte(chunk, 10)
+        payload_len = (byte(chunk, 3) << 24) | (byte(chunk, 4) << 16) | (byte(chunk, 5) << 8) |
+            byte(chunk, 6) * 0x100000000 + (byte(chunk, 7) << 24) + (byte(chunk, 8) << 16) +
+            (byte(chunk, 9) << 8) + byte(chunk, 10)
         offset = 10
     end
-    local mask = band(second_byte, 0x80) > 0
-    if mask then
+    local has_mask = second_byte & 0x80 > 0
+    if has_mask then
         offset = offset + 4
     end
     if #chunk < offset + payload_len then
@@ -128,64 +136,69 @@ WS.decodeFrame = function(chunk)
     local first_byte = byte(chunk, 1)
     local payload = sub(chunk, offset + 1, offset + payload_len)
     assert(#payload == payload_len, "Payload length mismatch")
-    if mask then
+    if has_mask then
         payload = WS.maskPayload(payload, sub(chunk, offset - 3, offset))
     end
     local extra = sub(chunk, offset + payload_len + 1)
     return {
-        fin = band(first_byte, 0x80) > 0,
-        rsv1 = band(first_byte, 0x40) > 0,
-        rsv2 = band(first_byte, 0x20) > 0,
-        rsv3 = band(first_byte, 0x10) > 0,
-        opcode = band(first_byte, 0x0F),
-        mask = mask,
+        fin = first_byte & 0x80 > 0,
+        rsv1 = first_byte & 0x40 > 0,
+        rsv2 = first_byte & 0x20 > 0,
+        rsv3 = first_byte & 0x10 > 0,
+        opcode = first_byte & 0x0F,
+        mask = has_mask,
         payload = payload,
         payload_len = payload_len,
         extra = extra
     }
 end
 
-WS.rand4 = function()
-    -- Generate 32 bits of pseudo random data
-    local num = floor(random() * 0x100000000)
-    -- Return as a 4-byte string
-    return char(
-        rshift(num, 24),
-        band(rshift(num, 16), 0xff),
-        band(rshift(num, 8), 0xff),
-        band(num, 0xff)
-    )
-end
-
+-- https://tools.ietf.org/html/rfc6455#section-5.2
 ---@private
 ---@param frame ServerWebSocketFrame
 ---@return string
 WS.encodeFrame = function(frame)
     local fin = frame.fin
-    local mask = frame.mask
-    local first_byte = {
+    local opcode = frame.opcode
+    local has_mask = frame.mask
+    local op1, op2, op3, op4 = bit.byte_to_four_bits(opcode or WS.Opcode.TEXT)
+    local first_byte = bit.bits_to_byte(
         fin,
-        false, false, false,
-        bit.byte_to_four_bits(frame.opcode)
-    }
+        false,
+        false,
+        false,
+        op1,
+        op2,
+        op3,
+        op4
+    )
     local len1, len2, len3, len4, len5, len6, len7 = bit.byte_to_bits(#frame.payload)
-    local second_byte = {
-        mask,
-        len1, len2, len3, len4, len5, len6, len7
+    local second_byte = bit.bits_to_byte(
+        has_mask,
+        len1,
+        len2,
+        len3,
+        len4,
+        len5,
+        len6,
+        len7
+    )
+    local payload_len = #frame.payload
+    local payload = frame.payload
+    local mask_key = WS.rand4()
+    if has_mask then
+        payload = WS.maskPayload(payload, mask_key)
+        payload_len = #payload
+    end
+    local bytes = {
+        char(first_byte),
+        char(second_byte),
     }
-    local extended_payload_len = {}
-    -- if #frame.payload > 125 then
-    --     local extended_len = bit.four_bits_to_byte(len4, len3, len2, len1)
-    --     table.insert(extended_payload_len, extended_len)
-    -- end
-    -- if mask then
-    --     local masked_payload = WS.maskPayload(frame.payload, frame.mask_key)
-    --     payload = masked_payload
-    -- end
-    local bytes = {}
-    table.insert(bytes, bit.bits_to_byte(table.unpack(first_byte)))
-    table.insert(bytes, bit.bits_to_byte(table.unpack(second_byte)))
-    return string.char(table.unpack(bytes))
+    if payload_len < 126 then
+        bytes[3] = char(payload_len)
+    end
+    bytes[#bytes + 1] = payload
+    return concat(bytes)
 end
 
 ---@private
@@ -200,7 +213,7 @@ WS.maskPayload = function(payload, mask_key)
     }
     local masked_payload = {}
     for pos = 1, #payload do
-        masked_payload[pos] = char(bxor(byte(payload, pos), bytes[(pos - 1) % 4 + 1]))
+        masked_payload[pos] = char(byte(payload, pos) ~ bytes[(pos - 1) % 4 + 1])
     end
     return concat(masked_payload)
 end
