@@ -1,3 +1,6 @@
+-- Some parts of `encode`/`decode` frame were copied from Luvit's `ws.lua` module
+-- https://github.com/creationix/lua-websocket/blob/master/websocket-codec.lua
+
 local base64 = require "base64"
 local sha1 = require "external.sha1"
 local bit = require "lib.utils.bit"
@@ -8,18 +11,25 @@ local json = require "external.json"
 
 ---@class WebSocketFrame
 ---@field fin boolean
+---@field rsv1 any
+---@field rsv2 any
+---@field rsv3 any
 ---@field opcode wsopcode
 ---@field mask boolean
----@field mask_key integer[]
----@field payload integer[]
+---@field payload string
+---@field payload_len integer
+---@field extra string
 
 ---@class ClientWebSocketFrame: WebSocketFrame
----@field payload integer[]
----@field payload_len integer
----@field payload_str string
 
 ---@class ServerWebSocketFrame: WebSocketFrame
----@field payload string
+---@field opcode? wsopcode
+
+local byte, char, sub = string.byte, string.char, string.sub
+local band, bor, bxor, rshift, lshift = bit.band, bit.bor, bit.bxor, bit.rshift, bit.lshift
+local floor, random = math.floor, math.random
+local concat = table.concat
+local colors = term.colors
 
 -- Currently implements version 13 of the WebSocket protocol.
 -- No support for `subprotocols` and `extensions` yet.
@@ -55,8 +65,8 @@ WS.handshake = function(req, client)
     local is_get_request = req.method == 'GET'
     local has_origin = headers.Origin ~= nil
     if not has_origin then
-        print(term.colors.bg_yellow "WARNING: No Origin header found.")
-        print(term.colors.bg_yellow("Request Host: " .. headers.Host))
+        print(colors.bg_yellow "WARNING: No Origin header found.")
+        print(colors.bg_yellow("Request Host: " .. headers.Host))
     end
     local is_valid_websocket_request = is_websocket_connection and is_get_request
     if not is_valid_websocket_request then
@@ -90,22 +100,61 @@ WS.handshake = function(req, client)
 end
 
 ---@private
----@return ClientWebSocketFrame
-WS.decodeFrame = function(req)
-    local decoded = {}
-    local bytes = { string.byte(req, 1, -1) }
-    local fin, rsv1, rsv2, rsv3, op4, op3, op2, op1 = bit.byte_to_bits(bytes[1])
-    local mask, len1, len2, len3, len4, len5, len6, len7 = bit.byte_to_bits(bytes[2])
-    local mask_key = { table.unpack(bytes, 3, 6) }
-    local payload = { table.unpack(bytes, 7, -1) }
-    decoded.fin = fin
-    decoded.opcode = bit.bits_to_byte(false, false, false, false, op4, op3, op2, op1)
-    decoded.mask = mask
-    decoded.payload_len = bit.bits_to_byte(false, len7, len6, len5, len4, len3, len2, len1)
-    decoded.mask_key = mask_key
-    decoded.payload = payload
-    decoded.payload_str = string.char(table.unpack(payload))
-    return decoded
+---@param chunk string
+---@return ClientWebSocketFrame?
+WS.decodeFrame = function(chunk)
+    local second_byte = byte(chunk, 2)
+    local payload_len = band(second_byte, 0x7F)
+    local offset = 2
+    if payload_len == 126 then
+        payload_len = bor(
+            lshift(byte(chunk, 3), 8),
+            byte(chunk, 4)
+        )
+        offset = 4
+    elseif payload_len == 127 then
+        payload_len = lshift(byte(chunk, 3), 24) | lshift(byte(chunk, 4), 16) | lshift(byte(chunk, 5), 8) |
+            byte(chunk, 6) * 0x100000000 + lshift(byte(chunk, 7), 24) + lshift(byte(chunk, 8), 16) +
+            lshift(byte(chunk, 9), 8) + byte(chunk, 10)
+        offset = 10
+    end
+    local mask = band(second_byte, 0x80) > 0
+    if mask then
+        offset = offset + 4
+    end
+    if #chunk < offset + payload_len then
+        return
+    end
+    local first_byte = byte(chunk, 1)
+    local payload = sub(chunk, offset + 1, offset + payload_len)
+    assert(#payload == payload_len, "Payload length mismatch")
+    if mask then
+        payload = WS.maskPayload(payload, sub(chunk, offset - 3, offset))
+    end
+    local extra = sub(chunk, offset + payload_len + 1)
+    return {
+        fin = band(first_byte, 0x80) > 0,
+        rsv1 = band(first_byte, 0x40) > 0,
+        rsv2 = band(first_byte, 0x20) > 0,
+        rsv3 = band(first_byte, 0x10) > 0,
+        opcode = band(first_byte, 0x0F),
+        mask = mask,
+        payload = payload,
+        payload_len = payload_len,
+        extra = extra
+    }
+end
+
+WS.rand4 = function()
+    -- Generate 32 bits of pseudo random data
+    local num = floor(random() * 0x100000000)
+    -- Return as a 4-byte string
+    return char(
+        rshift(num, 24),
+        band(rshift(num, 16), 0xff),
+        band(rshift(num, 8), 0xff),
+        band(num, 0xff)
+    )
 end
 
 ---@private
@@ -125,43 +174,35 @@ WS.encodeFrame = function(frame)
         len1, len2, len3, len4, len5, len6, len7
     }
     local extended_payload_len = {}
-    if #frame.payload > 125 then
-        local extended_len = bit.four_bits_to_byte(len4, len3, len2, len1)
-        table.insert(extended_payload_len, extended_len)
-    end
-    local payload = ""
-    if mask then
-        local masked_payload = WS.maskPayload(frame.payload, frame.mask_key)
-        payload = masked_payload
-    end
+    -- if #frame.payload > 125 then
+    --     local extended_len = bit.four_bits_to_byte(len4, len3, len2, len1)
+    --     table.insert(extended_payload_len, extended_len)
+    -- end
+    -- if mask then
+    --     local masked_payload = WS.maskPayload(frame.payload, frame.mask_key)
+    --     payload = masked_payload
+    -- end
     local bytes = {}
     table.insert(bytes, bit.bits_to_byte(table.unpack(first_byte)))
     table.insert(bytes, bit.bits_to_byte(table.unpack(second_byte)))
-    for _, byte in ipairs(extended_payload_len) do
-        table.insert(bytes, byte)
-    end
-    for _, byte in ipairs(frame.mask_key) do
-        table.insert(bytes, byte)
-    end
-    local payload_bytes = { string.byte(payload, 1, #payload) }
-    for _, byte in ipairs(payload_bytes) do
-        table.insert(bytes, byte)
-    end
     return string.char(table.unpack(bytes))
 end
 
 ---@private
 ---@param payload string
----@param mask_key integer[]
+---@param mask_key string
 WS.maskPayload = function(payload, mask_key)
-    local payload_bytes = { string.byte(payload, 1, #payload) }
-    local masked = {}
-    for pos = 1, #payload_bytes do
-        local byte = payload_bytes[pos]
-        local masked_byte = bit.bxor(byte, mask_key[(pos - 1) % 4 + 1])
-        table.insert(masked, masked_byte)
+    local bytes = {
+        byte(mask_key, 1),
+        byte(mask_key, 2),
+        byte(mask_key, 3),
+        byte(mask_key, 4),
+    }
+    local masked_payload = {}
+    for pos = 1, #payload do
+        masked_payload[pos] = char(bxor(byte(payload, pos), bytes[(pos - 1) % 4 + 1]))
     end
-    return string.char(table.unpack(masked))
+    return concat(masked_payload)
 end
 
 ---@private
@@ -179,6 +220,7 @@ WS.close = function(client)
     -- This whole logic should be reworked and cleaner
     client:write(frame, function(write_err)
         assert(not write_err, write_err)
+        client:close()
     end)
 end
 
@@ -188,11 +230,21 @@ end
 ---@return string | nil
 WS.handleWebSocketRequest = function(req, client)
     local decoded_frame = WS.decodeFrame(req)
+    if not decoded_frame then
+        return
+    end
     print("DECODED", json.encode(decoded_frame))
     if decoded_frame.opcode == WS.Opcode.CLOSE then
         return WS.close(client)
     end
-    return req
+    print("PAYLOAD", decoded_frame.payload)
+    return WS.encodeFrame({
+        fin = true,
+        payload = "Hello World!",
+        opcode = WS.Opcode.TEXT,
+        mask = false,
+        mask_key = {},
+    })
 end
 
 ---@private
@@ -200,7 +252,7 @@ end
 ---@param client Socket
 WS.handleWebSocketResponse = function(res, client)
     if not res then
-        return client:close()
+        return
     end
     client:write(res, function(write_err)
         assert(not write_err, write_err)

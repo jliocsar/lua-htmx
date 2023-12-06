@@ -27,6 +27,8 @@ local env = require "lib.env"
 ---@class Router
 ---@field [route] handler
 
+local format = string.format
+
 local HTTP_REQUEST_HEAD_MATCH <const> = "([A-Z]+) ([^ ]+) HTTP/([0-9.]+)(.+)"
 local HTTP_HEADER_ENTRY_MATCH <const> = "([^:]+):%s([^\r\n]+)"
 local HTTP_BODY_MATCH <const> = "\r\n\r\n(.+)"
@@ -97,7 +99,7 @@ Http.cached = function(res, max_age)
         return res
     end
     res.headers = res.headers or {}
-    res.headers["Cache-Control"] = string.format("max-age=%d", max_age or 3600)
+    res.headers["Cache-Control"] = format("max-age=%d", max_age or 3600)
     return res
 end
 
@@ -189,7 +191,7 @@ Http.stringifyCookies = function(cookies)
     local str_cookies = ""
     for key, value in pairs(cookies) do
         local cookie_value = value.value
-        str_cookies = string.format("Set-Cookie: %s=%s", key, tostring(cookie_value))
+        str_cookies = format("Set-Cookie: %s=%s", key, tostring(cookie_value))
         if value.httponly then
             str_cookies = str_cookies .. "; HttpOnly"
         end
@@ -197,7 +199,7 @@ Http.stringifyCookies = function(cookies)
             str_cookies = str_cookies .. "; Secure"
         end
         if value.expires then
-            str_cookies = str_cookies .. string.format("; Expires=%s", value.expires)
+            str_cookies = str_cookies .. format("; Expires=%s", value.expires)
         end
         str_cookies = str_cookies .. "\r\n"
     end
@@ -217,14 +219,14 @@ Http.response = function(response)
         status = Http.Status.INTERNAL_SERVER_ERROR
         status_name = Http.StatusName[status]
     end
-    local payload = string.format("HTTP/1.1 %d %s\r\n", status, status_name)
+    local payload = format("HTTP/1.1 %d %s\r\n", status, status_name)
         .. headers
     if body then
         if not response.headers or not response.headers["Content-Type"] then
             payload = payload .. "Content-Type: text/plain\r\n"
         end
         payload = payload
-            .. string.format("Content-Length: %d", #body)
+            .. format("Content-Length: %d", #body)
             .. "\r\n\r\n"
             .. body
     else

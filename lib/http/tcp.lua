@@ -23,6 +23,9 @@ local term = require "lib.utils.term"
 
 local BACKLOG <const> = 128
 
+local format = string.format
+local colors = term.colors
+
 ---@class Tcp
 local Tcp = {}
 
@@ -80,13 +83,13 @@ Tcp.createServer = function(options)
   function server:start()
     local current = socket:getsockname()
     if not current then
-      print(term.colors.red_bright(string.format("Could not start server, is the port %d available?\n", port)))
+      print(colors.red_bright(format("Could not start server, is the port %d available?\n", port)))
       os.exit(98)
     end
-    local now = term.colors.blue_bright(os.date "%c")
-    local address = term.colors.underline(string.format("http://%s:%d", host, port))
-    local listening = term.colors.cyan_bright("Server listening on " .. address)
-    print(term.colors.bold((string.format("[%s] %s", now, listening))))
+    local now = colors.blue_bright(os.date "%c")
+    local address = colors.underline(format("http://%s:%d", host, port))
+    local listening = colors.cyan_bright("Server listening on " .. address)
+    print(colors.bold((format("[%s] %s", now, listening))))
   end
 
   return server

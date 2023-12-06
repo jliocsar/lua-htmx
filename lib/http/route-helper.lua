@@ -1,3 +1,5 @@
+local format = string.format
+
 ---@class RouteHelper
 local RouteHelper = {}
 
@@ -6,14 +8,14 @@ local RouteHelper = {}
 RouteHelper.findRouters = function(modname_prefix)
     local find_target_path = modname_prefix
         :gsub("%.", "/")
-    local find_routers = io.popen(string.format("find %s -name '*.lua' -type f -exec basename {} .lua \\;",
+    local find_routers = io.popen(format("find %s -name '*.lua' -type f -exec basename {} .lua \\;",
         find_target_path))
     assert(find_routers, "Failed to find routers")
 
     ---@type table<method, handler[]>
     local routers = {}
     for router_name in find_routers:lines() do
-        local router_file_name = string.format("%s.%s", modname_prefix, router_name)
+        local router_file_name = format("%s.%s", modname_prefix, router_name)
         ---@type HttpRouter
         local router = require(router_file_name)
         RouteHelper.merge(routers, router)
