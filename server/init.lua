@@ -11,7 +11,12 @@ local app = App:new({
     port = config.PORT,
     routers = [[server.routers]]
 })
-local ws_server = ws.createServer(config.HOST, config.PORT + 1)
+local ws_server = ws.createServer(config.HOST, config.PORT + 1, function(decoded_frame, client)
+    return {
+        fin = true,
+        payload = "Hello World",
+    }
+end)
 
 App:use(static.use())
 App:withWebSocket(ws_server)

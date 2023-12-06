@@ -7,7 +7,6 @@ local bit = require "lib.utils.bit"
 local http = require "lib.http"
 local tcp = require "lib.http.tcp"
 local term = require "lib.utils.term"
-local json = require "external.json"
 
 ---@class WebSocketFrame
 ---@field fin boolean
@@ -237,8 +236,9 @@ end
 ---@private
 ---@param req string
 ---@param client Socket
+---@param on_request fun(decoded_frame: ClientWebSocketFrame, client: Socket): ServerWebSocketFrame
 ---@return string | nil
-WS.handleWebSocketRequest = function(req, client)
+WS.handleWebSocketRequest = function(req, client, on_request)
     local decoded_frame = WS.decodeFrame(req)
     if not decoded_frame then
         return
@@ -248,10 +248,7 @@ WS.handleWebSocketRequest = function(req, client)
         return WS.close(client)
     end
     -- print("PAYLOAD", decoded_frame.payload)
-    local response = WS.encodeFrame {
-        fin = true,
-        payload = "Hello World!",
-    }
+    local response = WS.encodeFrame(on_request(decoded_frame, client))
     return response
 end
 
@@ -301,8 +298,9 @@ end
 
 ---@param host string
 ---@param port integer
+---@param on_request fun(decoded_frame: ClientWebSocketFrame, client: Socket): ServerWebSocketFrame
 ---@return Server
-WS.createServer = function(host, port)
+WS.createServer = function(host, port, on_request)
     local server = tcp.createServer({
         host = host,
         port = port,
@@ -327,7 +325,7 @@ WS.createServer = function(host, port)
             local parsed_req = http.parseRequest(req)
             -- isn't a handshake
             if not parsed_req then
-                return WS.handleWebSocketRequest(req, client)
+                return WS.handleWebSocketRequest(req, client, on_request)
             end
             return WS.handshake(parsed_req, client)
         end
